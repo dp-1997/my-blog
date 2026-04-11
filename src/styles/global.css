@@ -1,3 +1,5 @@
+@import '@fontsource-variable/jetbrains-mono';
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,19 +7,22 @@
 }
 
 :root {
-  --bg:     #F5F0E8;
-  --fg:     #1C1917;
-  --muted:  #78716C;
-  --accent: #C4715A;
-  --border: #E4DDD4;
-  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+  --bg:        #F5F0E8;
+  --fg:        #1C1917;
+  --muted:     #78716C;
+  --accent:    #C4715A;
+  --border:    #E4DDD4;
+  --highlight: #F5E9A8;
+  --terminal-bg: #2A2723;
+  --terminal-fg: #F5F0E8;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --max-width: 680px;
-  --font-size: 17px;
-  --line-height: 1.8;
+  --font-size: 16px;
+  --line-height: 1.7;
 }
 
 html {
-  font-family: var(--font-serif);
+  font-family: var(--font-mono);
   font-size: var(--font-size);
   line-height: var(--line-height);
   background-color: var(--bg);
@@ -41,14 +46,13 @@ a {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 4.5rem;
+  gap: 1rem;
+  margin-bottom: 3rem;
 }
 
 /* Name sits below the illustration — underline signals it's a link */
 .site-name {
-  font-size: 0.95rem;
-  font-style: italic;
+  font-size: 0.85rem;
   color: var(--muted);
   letter-spacing: 0.01em;
   text-decoration: underline;
@@ -61,6 +65,45 @@ a {
 .site-name:hover {
   color: var(--fg);
   text-decoration-color: var(--muted);
+}
+
+/* ── Greeting (terminal-style) ── */
+.greeting {
+  background: var(--terminal-bg);
+  color: var(--terminal-fg);
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 3.5rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  overflow-x: auto;
+}
+
+.greeting span.line {
+  display: block;
+}
+
+.greeting .cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--terminal-fg);
+  vertical-align: text-bottom;
+  margin-left: 0.15em;
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%, 50%   { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* ── Section heading (e.g. "Thoughts") ── */
+.section-heading {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.75rem;
 }
 
 /* ── Header illustration animation ── */
@@ -109,32 +152,36 @@ a {
 }
 
 .post-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 2rem;
-  padding: 0.9rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.post-list-item:first-child {
-  border-top: 1px solid var(--border);
+  padding: 0.55rem 0;
 }
 
 .post-list-item a {
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  background: var(--highlight);
+  padding: 0.18em 0.45em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background 0.2s;
 }
 
 .post-list-item a:hover {
-  color: var(--muted);
+  background: var(--accent);
+  color: var(--bg);
 }
 
-.post-list-date {
-  white-space: nowrap;
+.post-list-new {
+  margin-left: 0.5rem;
   color: var(--muted);
-  font-size: 0.875rem;
-  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.post-list-footer {
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
 }
 
 /* ── Post page ── */

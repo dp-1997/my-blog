@@ -6,17 +6,32 @@ const posts = (await getCollection('posts'))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10).toUpperCase();
 }
+
+const latest = posts[0];
 ---
 
-<Base title="Damian Pickett">
+<Base
+  title="Damian Pickett"
+  description="The personal blog and digital playground of Damian Pickett."
+>
+  <section class="greeting" aria-label="Welcome">
+    <span class="line">&gt; Hello</span><span class="line">&gt; My name is Damian</span><span class="line">&gt; This is my blog and digital playground<span class="cursor"></span></span>
+  </section>
+
+  <h1 class="section-heading">Thoughts</h1>
+
   <ul class="post-list">
-    {posts.map(post => (
+    {posts.map((post, i) => (
       <li class="post-list-item">
         <a href={`/posts/${post.id}`}>{post.data.title}</a>
-        <span class="post-list-date">{formatDate(post.data.date)}</span>
+        {i === 0 && <span class="post-list-new">(new)</span>}
       </li>
     ))}
   </ul>
+
+  {latest && (
+    <p class="post-list-footer">{formatDate(latest.data.date)}</p>
+  )}
 </Base>
