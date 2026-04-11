@@ -4,7 +4,6 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  // TODO: replace with your production URL once deployed (used by RSS + canonical URLs)
-  site: 'https://damianpickett.com',
+  site: 'https://anyone-can-cook.com',
   integrations: [mdx()],
 });
