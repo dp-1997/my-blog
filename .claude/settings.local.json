@@ -22,7 +22,8 @@
       "Bash(git push:*)",
       "Bash(ssh-keygen -t ed25519 -C \"damianpickett@github\" -f ~/.ssh/github_blog -N \"\")",
       "Read(//Users/damianpickett/.ssh/**)",
-      "Bash(curl -sL \"https://substackcdn.com/image/fetch/f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Ffreddiedeboer.substack.com%2Fapi%2Fv1%2Fpost_preview%2F114377165%2Ftwitter.jpg%3Fversion%3D4\" -o /Users/damianpickett/Projects/my-blog/src/content/posts/hello-world/ratatouille.jpg)"
+      "Bash(curl -sL \"https://substackcdn.com/image/fetch/f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Ffreddiedeboer.substack.com%2Fapi%2Fv1%2Fpost_preview%2F114377165%2Ftwitter.jpg%3Fversion%3D4\" -o /Users/damianpickett/Projects/my-blog/src/content/posts/hello-world/ratatouille.jpg)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

@@ -1,0 +1,207 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{items.length > 0 && (
+  <div class="toc-root" data-toc>
+    <button
+      class="toc-toggle"
+      type="button"
+      aria-label="Open table of contents"
+      aria-expanded="false"
+      aria-controls="toc-panel"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+    </button>
+
+    <div id="toc-panel" class="toc-panel" hidden>
+      <p class="toc-label">On this page</p>
+      <ol class="toc-list">
+        {items.map((h) => (
+          <li class={`toc-item toc-item--depth-${h.depth}`}>
+            <a href={`#${h.slug}`}>{h.text}</a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+)}
+
+<style>
+  .toc-root {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+  }
+
+  /* Hidden on mobile */
+  @media (max-width: 768px) {
+    .toc-root {
+      display: none;
+    }
+  }
+
+  .toc-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px var(--shadow-strong);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .toc-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px var(--shadow-strong);
+  }
+
+  .toc-panel {
+    position: absolute;
+    bottom: calc(100% + 0.75rem);
+    right: 0;
+    width: 300px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 10px 30px var(--shadow-strong);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+
+  .toc-panel.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .toc-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.85rem;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 0.55rem;
+    line-height: 1.4;
+  }
+
+  .toc-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .toc-item--depth-3 {
+    padding-left: 1rem;
+  }
+
+  .toc-item a {
+    text-decoration: none;
+    font-size: 0.82rem;
+    color: var(--fg);
+    display: block;
+    transition: color 0.15s ease;
+  }
+
+  .toc-item a:hover {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  const root = document.querySelector('[data-toc]');
+  if (root) {
+    const btn = root.querySelector('.toc-toggle') as HTMLButtonElement;
+    const panel = root.querySelector('.toc-panel') as HTMLElement;
+    const links = root.querySelectorAll<HTMLAnchorElement>('.toc-list a');
+
+    let isOpen = false;
+    let closeTimer: number | undefined;
+
+    function open() {
+      if (closeTimer) {
+        window.clearTimeout(closeTimer);
+        closeTimer = undefined;
+      }
+      panel.hidden = false;
+      // Force layout flush so the transition runs from the hidden state
+      void panel.offsetWidth;
+      panel.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      isOpen = true;
+    }
+
+    function close() {
+      panel.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      isOpen = false;
+      closeTimer = window.setTimeout(() => {
+        panel.hidden = true;
+      }, 220);
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isOpen ? close() : open();
+    });
+
+    links.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (!href) return;
+        const target = document.getElementById(href.slice(1));
+        if (!target) return;
+        close();
+        // Smooth behavior is set globally via `html { scroll-behavior: smooth }`
+        target.scrollIntoView({ block: 'start' });
+        // Update URL hash without jumping
+        history.replaceState(null, '', href);
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (isOpen && !root.contains(e.target as Node)) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) close();
+    });
+  }
+</script>
