@@ -19,7 +19,9 @@
       "WebFetch(domain:anthropic.com)",
       "Bash(git remote:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ssh-keygen -t ed25519 -C \"damianpickett@github\" -f ~/.ssh/github_blog -N \"\")",
+      "Read(//Users/damianpickett/.ssh/**)"
     ]
   }
 }
