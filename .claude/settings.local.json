@@ -16,7 +16,10 @@
       "WebFetch(domain:www.notion.so)",
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:www.notion.com)",
-      "WebFetch(domain:anthropic.com)"
+      "WebFetch(domain:anthropic.com)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ]
   }
 }
