@@ -11,7 +11,8 @@
       "WebFetch(domain:ratatouille.fandom.com)",
       "WebFetch(domain:disneynews.us)",
       "WebFetch(domain:en.wikipedia.org)",
-      "Bash(curl -sL \"https://img.youtube.com/vi/Ih6jcKd7VwU/maxresdefault.jpg\" -o /Users/damianpickett/Projects/my-blog/src/content/posts/hello-world/anton-ego.jpg)"
+      "Bash(curl -sL \"https://img.youtube.com/vi/Ih6jcKd7VwU/maxresdefault.jpg\" -o /Users/damianpickett/Projects/my-blog/src/content/posts/hello-world/anton-ego.jpg)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
