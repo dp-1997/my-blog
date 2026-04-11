@@ -1,0 +1,175 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #faf9f6;
+  --fg: #000000;
+  --muted: #666666;
+  --border: #e2e2e0;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  --max-width: 680px;
+  --font-size: 14px;
+  --line-height: 1.65;
+}
+
+html {
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+a {
+  color: inherit;
+}
+
+/* ── Site header ── */
+.site-header {
+  margin-bottom: 3.5rem;
+}
+
+.site-header a {
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.site-header a:hover {
+  text-decoration: underline;
+}
+
+/* ── Post list (homepage) ── */
+.post-list {
+  list-style: none;
+}
+
+.post-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.post-list-item:first-child {
+  border-top: 1px solid var(--border);
+}
+
+.post-list-item a {
+  text-decoration: none;
+}
+
+.post-list-item a:hover {
+  text-decoration: underline;
+}
+
+.post-list-date {
+  white-space: nowrap;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ── Post page ── */
+.post-title {
+  margin-bottom: 2.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.prose {
+  line-height: 1.85;
+}
+
+.prose p {
+  margin-bottom: 1.2rem;
+}
+
+.prose h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1rem;
+}
+
+.prose h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.prose li {
+  margin-bottom: 0.3rem;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 2rem 0;
+}
+
+.prose a {
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  opacity: 0.65;
+}
+
+.prose blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 1rem;
+  color: var(--muted);
+  margin: 1.5rem 0;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+.prose code {
+  background: #f0efe9;
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+.prose pre {
+  background: #f0efe9;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+
+/* ── Post metadata footer ── */
+.post-meta {
+  margin-top: 4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.post-meta p {
+  margin-bottom: 0.3rem;
+}
