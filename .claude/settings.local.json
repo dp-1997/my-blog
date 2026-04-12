@@ -24,7 +24,18 @@
       "Read(//Users/damianpickett/.ssh/**)",
       "Bash(curl -sL \"https://substackcdn.com/image/fetch/f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Ffreddiedeboer.substack.com%2Fapi%2Fv1%2Fpost_preview%2F114377165%2Ftwitter.jpg%3Fversion%3D4\" -o /Users/damianpickett/Projects/my-blog/src/content/posts/hello-world/ratatouille.jpg)",
       "Bash(npm uninstall:*)",
-      "Bash(npx astro:*)"
+      "Bash(npx astro:*)",
+      "Bash(npx puppeteer:*)",
+      "Bash(npm ls:*)",
+      "Bash(node -e ':*)",
+      "Bash(npx --yes puppeteer browsers install chrome)",
+      "Bash(npx --yes puppeteer screenshot http://localhost:4321 --viewport 1280x900 --output src/content/posts/just-build-the-thing/screenshot-homepage.png)",
+      "Bash(ls screenshot*.png)",
+      "Read(//private/tmp/**)",
+      "Bash(npx --yes --package=puppeteer node /tmp/capture.mjs)",
+      "Bash(node capture.mjs)",
+      "Bash(lsof -ti:4321)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

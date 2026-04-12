@@ -1,0 +1,92 @@
+---
+title: Just Build the Thing
+date: 2026-04-12
+category: essay
+---
+import { Image } from 'astro:assets';
+import homepageImg from './screenshot-homepage.png';
+import postDesktopImg from './screenshot-post-desktop.png';
+import mobileImg from './screenshot-mobile.png';
+import ratatouilleImg from './ratatouille.jpg';
+
+I'm not a developer. I want to say that upfront because it shapes everything that comes next.
+
+I've wanted a personal site for a while. Not a Substack. Not a Medium page with someone else's logo on it. Something mine. Something that looked the way I wanted and felt the way I wanted. The problem was I had absolutely no idea how to make one.
+
+The normal path would've been: research static site generators, pick one, follow a tutorial, get stuck on step 7, Google the error, find a Stack Overflow answer from 2019, realize it's outdated, try a different tutorial. You know the loop. I've been trapped in it before. Three months of "learning" and nothing to show for it.
+
+I didn't do that this time.
+
+## What I did instead
+
+I opened Claude Code and said, roughly: *I want to build a personal blog. Here's the vibe. Let's go.*
+
+That's it. No tutorial. No course. No "let me get my environment set up first." I had a picture in my head of what I wanted and a tool that could help me build it. So we started building.
+
+I didn't know what Astro was. I didn't know what Vercel was. I didn't know what a content collection was. I didn't need to. Claude suggested Astro, explained why it made sense for what I wanted, and we went from there.
+
+The first version looked rough. The second was better. The third started to feel like something.
+
+## The vision came first
+
+Before I wrote a single word or touched any code, I knew what I wanted this place to feel like. Warm. Editorial. A little literary. I'd been collecting references for a while — sites, magazines, brands whose design I admired. Serif fonts. Cream backgrounds. Nothing that looks like it's trying to sell you anything.
+
+That matters more than people think. Having a clear picture of what you're building means you can actually tell whether what's in front of you is working or not. Without that, you're just pushing pixels around and hoping something clicks.
+
+<Image src={homepageImg} alt="The homepage of this site — animated header, post list, filter buttons" />
+
+## Plussing
+
+Walt Disney had this concept he called "plussing." The idea is simple: take what you have, look at it, and ask *what would make this a little better?* Not a redesign. Not starting over. Just: what's the next small thing that makes someone go, *oh, that's nice?*
+
+That became the whole process. We'd get something working, I'd live with it for a bit, and then we'd plus it.
+
+The header got this animated illustration — little particles drifting upward from a central point, like loose thoughts. We went back and forth on the timing until it felt alive without being annoying.
+
+The post pages got a table of contents that just sits there on desktop, quietly to the right, and tucks into a small button on mobile. Not in your face. Just there when you want it.
+
+<Image src={postDesktopImg} alt="A post page with the table of contents sitting to the right of the content on desktop" />
+
+We added tags — essays, notes, projects — with these filter buttons at the top of the homepage. Small additions. Each one making the site feel a little more considered.
+
+Dark mode. Typography tweaks. Responsive layouts so everything felt right whether you're on a laptop or your phone.
+
+<Image src={mobileImg} alt="The site on mobile — clean reading experience with a TOC toggle button" />
+
+## The test was writing something real
+
+I didn't want my first post to be *about* the blog. I wanted to write something that actually meant something to me. So I wrote about Anton Ego's speech from *Ratatouille*.
+
+If you haven't seen it: Ego is the most feared food critic in Paris. He's spent his career destroying restaurants. Then he eats a simple ratatouille — a peasant dish, prepared by a rat, in a Michelin-starred kitchen — and it stops him cold.
+
+> *"Not everyone can become a great artist. But a great artist can come from anywhere."*
+
+That line has been stuck in my head for years. The speech is about two minutes long and says more about creativity and criticism than most books on the subject. Writing about it was honestly the reason I wanted a blog in the first place. I needed somewhere to put that thought.
+
+<Image src={ratatouilleImg} alt="Anton Ego tasting the ratatouille — Pixar's Ratatouille (2007)" />
+
+And the site had to be worthy of the thought. That was the bar. If I was going to write about taste and craft, the thing I was publishing it on couldn't look like a default template.
+
+## What surprised me
+
+The collaboration wasn't one-directional. I gave Claude direction as often as it gave me suggestions. It proposed Astro — I pushed back on color choices. It suggested a layout — I said no, simpler. It built a feature — I said actually, I don't want that, try this instead.
+
+You're building together, and the person with the vision is driving. The tool doesn't have taste. You do.
+
+The site went through five or six major iterations across a handful of sessions. Each one started the same way: I'd look at what we had, notice what felt off, and say *let's fix this* or *let's add that.* No grand plan. No roadmap. Just: what would make this better right now?
+
+## The actual point
+
+I didn't learn how to code. I still don't know what half the files in this project do. But I built something that looks and feels exactly the way I wanted, and I shipped it. It's live. You're reading it on it.
+
+There's another version of this story where I spend three months taking an online course, get halfway through, lose steam, and abandon the whole idea. I've done that before. Probably you have too.
+
+The difference this time was I didn't try to learn the tools. I just used them.
+
+If you've been sitting on something you want to build — a site, a product, whatever it is — stop studying and start building. Have a vision. Pick up a tool. Start talking to it. You'll figure the rest out as you go.
+
+---
+
+<div class="post-signoff">
+  <p>Find me on <a href="https://x.com/DamianPickett_" target="_blank" rel="noopener noreferrer">X</a> and <a href="https://www.linkedin.com/in/damianpickett97" target="_blank" rel="noopener noreferrer">LinkedIn</a>.</p>
+</div>
