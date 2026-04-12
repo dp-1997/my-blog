@@ -9,11 +9,11 @@ import postDesktopImg from './screenshot-post-desktop.png';
 import mobileImg from './screenshot-mobile.png';
 import ratatouilleImg from './ratatouille.jpg';
 
-I'm not a developer. I want to say that upfront because it shapes everything that comes next.
+I'm a product marketer. I understand how products are built, positioned, and why they succeed or fail. I can talk about a user journey, a go-to-market strategy, a conversion funnel. What I couldn't do — until recently — was talk to an engineer in their language. Repos, branches, CLIs, deployments. I knew what these things *did* in broad strokes. I just couldn't do them myself.
 
-I've wanted a personal site for a while. Not a Substack. Not a Medium page with someone else's logo on it. Something mine. Something that looked the way I wanted and felt the way I wanted. The problem was I had absolutely no idea how to make one.
+I've wanted a personal site for a while. Not a Substack. Not a Medium page with someone else's logo on it. Something mine — that looked and felt the way I wanted it to. The vision was clear. The technical path to get there wasn't.
 
-The normal path would've been: research static site generators, pick one, follow a tutorial, get stuck on step 7, Google the error, find a Stack Overflow answer from 2019, realize it's outdated, try a different tutorial. You know the loop. I've been trapped in it before. Three months of "learning" and nothing to show for it.
+The normal route would've been: research static site generators, pick one, follow a tutorial, get stuck on step 7, Google the error, find a Stack Overflow answer from 2019, realize it's outdated, try a different tutorial. You know the loop. I've been in it before. Months of "learning" and nothing shipped.
 
 I didn't do that this time.
 
@@ -21,9 +21,9 @@ I didn't do that this time.
 
 I opened Claude Code and said, roughly: *I want to build a personal blog. Here's the vibe. Let's go.*
 
-That's it. No tutorial. No course. No "let me get my environment set up first." I had a picture in my head of what I wanted and a tool that could help me build it. So we started building.
+Claude suggested Astro as the framework and Vercel for deployment. And here's the thing — I didn't just nod along. I asked what they were, why they made sense, what the alternatives were. Claude explained each one in terms I could actually map to what I already understood about products and infrastructure. Astro: a static site generator, great for content-heavy sites, fast by default. Vercel: deployment made simple, connects to GitHub, rebuilds the site automatically when you push changes. GitHub: the repo that holds everything together.
 
-I didn't know what Astro was. I didn't know what Vercel was. I didn't know what a content collection was. I didn't need to. Claude suggested Astro, explained why it made sense for what I wanted, and we went from there.
+That conversation was the difference. Using Claude as a thought partner — to *understand* the tools, not just execute commands — meant I could actually make decisions. It wasn't just "AI does the code, I watch." It was a proper back-and-forth.
 
 The first version looked rough. The second was better. The third started to feel like something.
 
@@ -55,15 +55,15 @@ Dark mode. Typography tweaks. Responsive layouts so everything felt right whethe
 
 ## The test was writing something real
 
-I didn't want my first post to be *about* the blog. I wanted to write something that actually meant something to me. So I wrote about Anton Ego's speech from *Ratatouille*.
+To see if the site actually worked, I needed real content. Not lorem ipsum. Something with substance — headings, images, blockquotes, a video embed — to stress-test the design and see how it held together when something real was sitting on it.
 
-If you haven't seen it: Ego is the most feared food critic in Paris. He's spent his career destroying restaurants. Then he eats a simple ratatouille — a peasant dish, prepared by a rat, in a Michelin-starred kitchen — and it stops him cold.
+I wrote about Anton Ego's speech from *Ratatouille*. It had been rattling around in my head for years anyway, and this felt like the right excuse. That piece stayed as a test article throughout the build — I'd load it up, scroll through it, notice what wasn't quite right, go back and fix it. It did its job. It's not live on the site, but it shaped everything that is.
+
+The speech, if you haven't seen it: Ego is the most feared food critic in Paris. He's spent his career destroying restaurants. Then he eats a simple ratatouille — a peasant dish, made by a rat, in a Michelin-starred kitchen — and it stops him cold.
 
 > *"Not everyone can become a great artist. But a great artist can come from anywhere."*
 
-That line has been stuck in my head for years. The speech is about two minutes long and says more about creativity and criticism than most books on the subject. Writing about it was honestly the reason I wanted a blog in the first place. I needed somewhere to put that thought.
-
-And the site had to be worthy of the thought. That was the bar. If I was going to write about taste and craft, the thing I was publishing it on couldn't look like a default template.
+That line is why I wanted a blog. I needed somewhere to put thoughts like that. And the site had to be worthy of them — which meant it couldn't look like a default template.
 
 ## What surprised me
 
