@@ -14,7 +14,20 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
 
 {items.length > 0 && (
-  <div class="toc-root" data-toc>
+  <nav class="toc-root" data-toc aria-label="Table of contents">
+    {/* Desktop: always-visible sidebar */}
+    <div class="toc-sidebar">
+      <p class="toc-label">Table of Contents</p>
+      <ol class="toc-list">
+        {items.map((h) => (
+          <li class={`toc-item toc-item--depth-${h.depth}`}>
+            <a href={`#${h.slug}`}>{h.text}</a>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    {/* Mobile: toggle button + dropdown */}
     <button
       class="toc-toggle"
       type="button"
@@ -42,73 +55,16 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
         ))}
       </ol>
     </div>
-  </div>
+  </nav>
 )}
 
 <style>
-  .toc-root {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    z-index: 50;
-  }
-
-  /* Hidden on mobile */
-  @media (max-width: 768px) {
-    .toc-root {
-      display: none;
-    }
-  }
-
-  .toc-toggle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--fg);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px var(--shadow-strong);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-  }
-
-  .toc-toggle:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px var(--shadow-strong);
-  }
-
-  .toc-panel {
-    position: absolute;
-    bottom: calc(100% + 0.75rem);
-    right: 0;
-    width: 300px;
-    max-height: 60vh;
-    overflow-y: auto;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem;
-    box-shadow: 0 10px 30px var(--shadow-strong);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-  }
-
-  .toc-panel.is-open {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
+  /* ── Shared styles ── */
   .toc-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--fg);
     margin-bottom: 0.85rem;
   }
 
@@ -119,7 +75,7 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   }
 
   .toc-item {
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.5rem;
     line-height: 1.4;
   }
 
@@ -133,14 +89,95 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 
   .toc-item a {
     text-decoration: none;
-    font-size: 0.82rem;
-    color: var(--fg);
+    font-size: 0.78rem;
+    color: var(--muted);
     display: block;
     transition: color 0.15s ease;
   }
 
   .toc-item a:hover {
-    color: var(--accent);
+    color: var(--fg);
+  }
+
+  .toc-item a.is-active {
+    color: var(--fg);
+  }
+
+  /* ── Desktop: always-visible sidebar ── */
+  .toc-sidebar {
+    position: fixed;
+    top: 8rem;
+    left: calc(50% + 370px);
+    width: 210px;
+  }
+
+  /* Hide mobile elements on desktop */
+  .toc-toggle,
+  .toc-panel {
+    display: none;
+  }
+
+  /* ── Mobile: below 1100px, switch to toggle mode ── */
+  @media (max-width: 1100px) {
+    .toc-sidebar {
+      display: none;
+    }
+
+    .toc-root {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 50;
+    }
+
+    .toc-toggle {
+      display: flex;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--fg);
+      color: var(--bg);
+      border: none;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px var(--shadow-strong);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .toc-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px var(--shadow-strong);
+    }
+
+    .toc-panel {
+      display: block;
+      position: absolute;
+      bottom: calc(100% + 0.75rem);
+      right: 0;
+      width: 280px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.4rem;
+      box-shadow: 0 10px 30px var(--shadow-strong);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .toc-panel[hidden] {
+      display: none;
+    }
+
+    .toc-panel.is-open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
   }
 </style>
 
@@ -149,8 +186,9 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   if (root) {
     const btn = root.querySelector('.toc-toggle') as HTMLButtonElement;
     const panel = root.querySelector('.toc-panel') as HTMLElement;
-    const links = root.querySelectorAll<HTMLAnchorElement>('.toc-list a');
+    const allLinks = root.querySelectorAll<HTMLAnchorElement>('.toc-list a');
 
+    // ── Mobile toggle ──
     let isOpen = false;
     let closeTimer: number | undefined;
 
@@ -160,7 +198,6 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
         closeTimer = undefined;
       }
       panel.hidden = false;
-      // Force layout flush so the transition runs from the hidden state
       void panel.offsetWidth;
       panel.classList.add('is-open');
       btn.setAttribute('aria-expanded', 'true');
@@ -181,21 +218,6 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       isOpen ? close() : open();
     });
 
-    links.forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const href = link.getAttribute('href');
-        if (!href) return;
-        const target = document.getElementById(href.slice(1));
-        if (!target) return;
-        close();
-        // Smooth behavior is set globally via `html { scroll-behavior: smooth }`
-        target.scrollIntoView({ block: 'start' });
-        // Update URL hash without jumping
-        history.replaceState(null, '', href);
-      });
-    });
-
     document.addEventListener('click', (e) => {
       if (isOpen && !root.contains(e.target as Node)) close();
     });
@@ -203,5 +225,43 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen) close();
     });
+
+    // ── Smooth scroll for all TOC links ──
+    allLinks.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        if (!href) return;
+        const target = document.getElementById(href.slice(1));
+        if (!target) return;
+        if (isOpen) close();
+        target.scrollIntoView({ block: 'start' });
+        history.replaceState(null, '', href);
+      });
+    });
+
+    // ── Active heading tracking (desktop sidebar) ──
+    const headingEls = Array.from(allLinks)
+      .map(a => {
+        const href = a.getAttribute('href');
+        return href ? document.getElementById(href.slice(1)) : null;
+      })
+      .filter(Boolean) as HTMLElement[];
+
+    function updateActive() {
+      let current = '';
+      for (const heading of headingEls) {
+        if (heading.getBoundingClientRect().top <= 120) {
+          current = heading.id;
+        }
+      }
+      allLinks.forEach(a => {
+        const href = a.getAttribute('href');
+        a.classList.toggle('is-active', href === `#${current}`);
+      });
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    updateActive();
   }
 </script>
