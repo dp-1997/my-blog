@@ -10,6 +10,7 @@ function formatDate(date: Date): string {
 }
 
 const latest = posts[0];
+const filters = ['essay', 'note', 'project'] as const;
 ---
 
 <Base
@@ -18,10 +19,17 @@ const latest = posts[0];
 >
   <h1 class="section-heading">Thoughts</h1>
 
+  <nav class="post-filters" aria-label="Filter posts by type">
+    {filters.map(f => (
+      <button class="post-filter" data-filter={f}>{f}s</button>
+    ))}
+  </nav>
+
   <ul class="post-list">
     {posts.map((post, i) => (
-      <li class="post-list-item">
+      <li class="post-list-item" data-category={post.data.category}>
         <a href={`/posts/${post.id}`}>{post.data.title}</a>
+        <span class="post-type-tag">{post.data.category}</span>
         {i === 0 && <span class="post-list-new">(new)</span>}
       </li>
     ))}
@@ -31,3 +39,28 @@ const latest = posts[0];
     <p class="post-list-footer">{formatDate(latest.data.date)}</p>
   )}
 </Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.post-filter');
+  const items = document.querySelectorAll<HTMLLIElement>('.post-list-item');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter!;
+      const isActive = btn.classList.contains('active');
+
+      if (isActive) {
+        // Deactivate — show all
+        btn.classList.remove('active');
+        items.forEach(item => item.style.display = '');
+      } else {
+        // Activate this filter, deactivate others
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        items.forEach(item => {
+          item.style.display = item.dataset.category === filter ? '' : 'none';
+        });
+      }
+    });
+  });
+</script>
