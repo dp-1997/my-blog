@@ -7,12 +7,20 @@ import LiquidGlassDemo from '../../../components/LiquidGlassDemo.astro';
 
 <LiquidGlassDemo />
 
-Wave your hand in front of the camera to ripple the picture like liquid glass. Each detected fingertip leaves an expanding ring that distorts what's behind it, with a touch of chromatic aberration so the surface feels refractive.
+Wave your hand in front of the camera and pick a mode. There are three:
+
+- **Glass Waves** — your fingertip leaves expanding rings that ripple the picture like liquid glass, with a touch of chromatic aberration so the surface feels refractive.
+- **Magic Wand** — gold sparkles trail your fingertip and drift through the scene, like you're writing with a sparkler.
+- **Lightsaber** — a blue blade extends from the tip of your index finger and follows the finger's orientation, dimming the room around it so it reads against any background.
 
 ## How it works
 
-The camera feed is uploaded each frame to a WebGL texture. A fragment shader samples that texture with a small displacement vector built from two parts: an ambient sine wave so the surface always feels alive, and a stack of expanding rings centered on recent fingertip positions.
+All three modes share the same pipeline: the camera feed is uploaded each frame to a WebGL texture, [MediaPipe's HandLandmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) runs in the browser and reports 21 landmarks per hand at ~30fps, and a single fragment shader branches on a mode uniform to decide what to draw. The mode picker at the top is a three-state iOS-style segmented control with a sliding thumb.
 
-[MediaPipe's HandLandmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) runs in the browser and reports 21 landmarks per hand at ~30fps. I take landmark 8 (the index fingertip), and whenever it moves more than a small threshold I push a new ripple into a ring buffer of the last twelve. Each ripple has an age; older ones expand outward and fade.
+**Glass Waves** takes landmark 8 (the index fingertip) and, whenever it moves more than a small threshold, pushes a new ripple into a ring buffer of the last twelve. Each ripple has an age; older ones expand outward and fade. The shader sums the influence of every active ripple — direction radially outward, amplitude peaking at the ring radius and falling off with age — then samples the video at the displaced UV. Splitting the red and blue channels along the displacement direction gives the slight rainbow fringing that sells the glass look.
 
-The shader does the rest: for every pixel it sums the influence of every active ripple — direction radially outward, amplitude peaking at the ring radius and falling off with age — then samples the video at the displaced UV. Splitting the red and blue channels along the displacement direction gives the slight rainbow fringing that sells the glass look.
+**Magic Wand** spawns small particles at the fingertip whenever it moves, each with a random velocity and a 1.2-second lifetime. A fixed-size buffer of ~32 particles drops the oldest as new ones come in. Positions and ages are uploaded as uniforms; the shader draws a 4-point star sparkle at each particle — a white-hot core, warm gold rays, additively blended over the camera.
+
+**Lightsaber** uses two landmarks: 8 (index tip) and 5 (index base knuckle). The direction vector between them defines the blade's orientation, and the blade is drawn as a signed distance field line segment extending outward from the fingertip. Because a blue glow can vanish on a white wall, the shader dims the background near the blade with `mix()` before compositing the blue inner glow and the white-hot core on top — so the saber stays visible whether you're in front of a window or a dark room. If the hand is lost, the blade fades out over a couple of frames instead of snapping off.
+
+One subtlety worth mentioning: hand detection runs at ~30fps but rendering runs at ~60fps. Early on, the saber's alpha was decaying to zero between detections because I was resetting the hand positions every frame. Now the positions persist across frames until MediaPipe explicitly reports no hand — the blade stays solid between detection ticks.
