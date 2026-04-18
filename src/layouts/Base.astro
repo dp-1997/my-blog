@@ -6,7 +6,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = "The personal blog and digital playground of Damian Pickett." } = Astro.props;
+const { title, description = "Essays, notes, and side projects by Damian Pickett." } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 ---
 
@@ -95,7 +95,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
       </a>
 
       <div class="site-meta">
-        <a href="/" class="site-name">Damian Pickett</a>
+        <a href="/" class="site-name">Anyone Can Cook</a>
         <p class="site-tagline">Essays, notes, and side projects.</p>
       </div>
     </header>

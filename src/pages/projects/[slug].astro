@@ -4,8 +4,8 @@ import Base from '../../layouts/Base.astro';
 import PostToc from '../../components/PostToc.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('posts');
-  return posts.map(post => ({
+  const projects = await getCollection('projects');
+  return projects.map(post => ({
     params: { slug: post.id },
     props: { post },
   }));
@@ -27,6 +27,15 @@ function formatDate(date: Date): string {
     </div>
     <footer class="post-meta">
       <p>× DATE: {formatDate(post.data.date)}</p>
+      {post.data.techStack && post.data.techStack.length > 0 && (
+        <p>× STACK: {post.data.techStack.join(', ')}</p>
+      )}
+      {post.data.githubUrl && (
+        <p>× GITHUB: <a href={post.data.githubUrl}>{post.data.githubUrl}</a></p>
+      )}
+      {post.data.demoUrl && (
+        <p>× DEMO: <a href={post.data.demoUrl}>{post.data.demoUrl}</a></p>
+      )}
       {post.data.location && <p>× LOCATION: {post.data.location}</p>}
       {post.data.tags && post.data.tags.length > 0 && (
         <p>× TAGS: {post.data.tags.join(', ')}</p>

@@ -2,8 +2,19 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 
-const posts = (await getCollection('posts'))
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const [essayEntries, noteEntries, projectEntries] = await Promise.all([
+  getCollection('essays'),
+  getCollection('notes'),
+  getCollection('projects'),
+]);
+
+type Category = 'essay' | 'note' | 'project';
+
+const posts = [
+  ...essayEntries.map(p =>   ({ ...p, category: 'essay'   as Category, href: `/essays/${p.id}`   })),
+  ...noteEntries.map(p =>    ({ ...p, category: 'note'    as Category, href: `/notes/${p.id}`    })),
+  ...projectEntries.map(p => ({ ...p, category: 'project' as Category, href: `/projects/${p.id}` })),
+].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10).toUpperCase();
@@ -14,8 +25,8 @@ const filters = ['essay', 'note', 'project'] as const;
 ---
 
 <Base
-  title="Damian Pickett"
-  description="The personal blog and digital playground of Damian Pickett."
+  title="Anyone Can Cook"
+  description="Essays, notes, and side projects."
 >
   <h1 class="section-heading">Thoughts</h1>
 
@@ -27,9 +38,9 @@ const filters = ['essay', 'note', 'project'] as const;
 
   <ul class="post-list">
     {posts.map((post, i) => (
-      <li class="post-list-item" data-category={post.data.category}>
-        <a href={`/posts/${post.id}`}>{post.data.title}</a>
-        <span class="post-type-tag">{post.data.category}</span>
+      <li class="post-list-item" data-category={post.category}>
+        <a href={post.href}>{post.data.title}</a>
+        <span class="post-type-tag">{post.category}</span>
         {i === 0 && <span class="post-list-new">(new)</span>}
       </li>
     ))}
@@ -50,11 +61,9 @@ const filters = ['essay', 'note', 'project'] as const;
       const isActive = btn.classList.contains('active');
 
       if (isActive) {
-        // Deactivate — show all
         btn.classList.remove('active');
         items.forEach(item => item.style.display = '');
       } else {
-        // Activate this filter, deactivate others
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         items.forEach(item => {
