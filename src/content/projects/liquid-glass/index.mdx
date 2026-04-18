@@ -1,0 +1,18 @@
+---
+title: Liquid Glass Waves
+date: 2026-04-18
+techStack: [WebGL, MediaPipe, TypeScript]
+---
+import LiquidGlassDemo from '../../../components/LiquidGlassDemo.astro';
+
+<LiquidGlassDemo />
+
+Wave your hand in front of the camera to ripple the picture like liquid glass. Each detected fingertip leaves an expanding ring that distorts what's behind it, with a touch of chromatic aberration so the surface feels refractive.
+
+## How it works
+
+The camera feed is uploaded each frame to a WebGL texture. A fragment shader samples that texture with a small displacement vector built from two parts: an ambient sine wave so the surface always feels alive, and a stack of expanding rings centered on recent fingertip positions.
+
+[MediaPipe's HandLandmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) runs in the browser and reports 21 landmarks per hand at ~30fps. I take landmark 8 (the index fingertip), and whenever it moves more than a small threshold I push a new ripple into a ring buffer of the last twelve. Each ripple has an age; older ones expand outward and fade.
+
+The shader does the rest: for every pixel it sums the influence of every active ripple — direction radially outward, amplitude peaking at the ring radius and falling off with age — then samples the video at the displaced UV. Splitting the red and blue channels along the displacement direction gives the slight rainbow fringing that sells the glass look.

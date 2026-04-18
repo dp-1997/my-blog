@@ -1,0 +1,397 @@
+---
+---
+
+<div class="lg-demo">
+  <button class="lg-start" type="button">Start camera</button>
+  <div class="lg-stage" hidden>
+    <video class="lg-video" autoplay playsinline muted></video>
+    <canvas class="lg-canvas"></canvas>
+    <p class="lg-hint">Wave your hand</p>
+  </div>
+  <p class="lg-error" hidden></p>
+</div>
+
+<style>
+  .lg-demo {
+    margin: 2rem 0;
+  }
+  .lg-start {
+    display: block;
+    margin: 0 auto;
+    padding: 0.7rem 1.4rem;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .lg-start:hover { opacity: 0.85; }
+  .lg-start:disabled { opacity: 0.5; cursor: wait; }
+
+  .lg-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .lg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    visibility: hidden; /* hidden but kept in layout so WebGL can read frames */
+  }
+  .lg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .lg-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 0.75rem;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 999px;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+  .lg-error {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--text);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+</style>
+
+<script>
+  type Vec2 = { x: number; y: number };
+  type Ripple = { pos: Vec2; born: number };
+
+  const RIPPLE_CAPACITY = 12;
+  const RIPPLE_LIFETIME_MS = 1600;
+  const MIN_HAND_DELTA = 0.012; // normalized distance threshold to log a new ripple
+
+  const root = document.currentScript?.previousElementSibling as HTMLElement | null;
+  if (!root || !root.classList.contains('lg-demo')) {
+    // Fallback: query by class if currentScript path isn't reliable
+  }
+
+  const demo = (root && root.classList.contains('lg-demo'))
+    ? root
+    : document.querySelector<HTMLElement>('.lg-demo');
+  if (!demo) throw new Error('LiquidGlassDemo: root element not found');
+
+  const startBtn = demo.querySelector<HTMLButtonElement>('.lg-start')!;
+  const stage = demo.querySelector<HTMLDivElement>('.lg-stage')!;
+  const video = demo.querySelector<HTMLVideoElement>('.lg-video')!;
+  const canvas = demo.querySelector<HTMLCanvasElement>('.lg-canvas')!;
+  const errorEl = demo.querySelector<HTMLParagraphElement>('.lg-error')!;
+
+  function showError(msg: string) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+    try {
+      await start();
+      startBtn.hidden = true;
+      stage.hidden = false;
+    } catch (err) {
+      console.error('[LiquidGlass]', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      showError(`Couldn't start the demo: ${msg}`);
+      startBtn.disabled = false;
+      startBtn.textContent = 'Try again';
+    }
+  });
+
+  async function start() {
+    // 1. Camera
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await video.play();
+
+    // 2. WebGL
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: false });
+    if (!gl) throw new Error('WebGL not supported in this browser');
+
+    const program = buildProgram(gl);
+    const aPos = gl.getAttribLocation(program, 'a_position');
+    const aUv = gl.getAttribLocation(program, 'a_uv');
+    const uTex = gl.getUniformLocation(program, 'u_tex')!;
+    const uTime = gl.getUniformLocation(program, 'u_time')!;
+    const uRippleCount = gl.getUniformLocation(program, 'u_rippleCount')!;
+    const uRipplePos = gl.getUniformLocation(program, 'u_ripplePos')!;
+    const uRippleAge = gl.getUniformLocation(program, 'u_rippleAge')!;
+    const uAspect = gl.getUniformLocation(program, 'u_aspect')!;
+
+    // Fullscreen quad
+    const quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      // x, y, u, v
+      -1, -1, 0, 1,
+       1, -1, 1, 1,
+      -1,  1, 0, 0,
+       1,  1, 1, 0,
+    ]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(aUv);
+    gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 16, 8);
+
+    // Texture
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.floor(stage.clientWidth * dpr);
+      const h = Math.floor(stage.clientHeight * dpr);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        gl!.viewport(0, 0, w, h);
+      }
+    }
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(stage);
+
+    // 3. Hand tracking via MediaPipe (CDN)
+    const ripples: Ripple[] = [];
+    let lastHand: Vec2 | null = null;
+
+    let landmarker: any = null;
+    try {
+      const mp = await import(
+        /* @vite-ignore */
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/vision_bundle.mjs'
+      );
+      const fileset = await mp.FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm'
+      );
+      landmarker = await mp.HandLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+          delegate: 'GPU',
+        },
+        runningMode: 'VIDEO',
+        numHands: 1,
+      });
+    } catch (err) {
+      console.warn('[LiquidGlass] MediaPipe load failed, falling back to ambient ripples', err);
+      // Continue without hand tracking — page still shows camera + ambient effect
+    }
+
+    // 4. Render loop
+    const startTs = performance.now();
+    let lastDetectTs = -1;
+
+    function frame() {
+      const now = performance.now();
+      const t = (now - startTs) / 1000;
+
+      resize();
+
+      // Hand detection (only when video has fresh data)
+      if (landmarker && video.readyState >= 2 && video.currentTime !== lastDetectTs) {
+        lastDetectTs = video.currentTime;
+        try {
+          const result = landmarker.detectForVideo(video, now);
+          if (result?.landmarks?.length > 0) {
+            const lm = result.landmarks[0];
+            // Index fingertip = landmark 8. Coords are in 0..1, x is mirrored relative to canvas (front camera)
+            const tip = lm[8];
+            const hand: Vec2 = { x: 1 - tip.x, y: tip.y }; // mirror x to match selfie view
+            if (!lastHand || dist(hand, lastHand) > MIN_HAND_DELTA) {
+              ripples.push({ pos: hand, born: now });
+              if (ripples.length > RIPPLE_CAPACITY) ripples.shift();
+            }
+            lastHand = hand;
+          } else {
+            lastHand = null;
+          }
+        } catch (e) {
+          // ignore transient detection errors
+        }
+      }
+
+      // Drop expired ripples
+      while (ripples.length > 0 && now - ripples[0].born > RIPPLE_LIFETIME_MS) {
+        ripples.shift();
+      }
+
+      // Upload latest video frame
+      gl!.bindTexture(gl!.TEXTURE_2D, tex);
+      try {
+        gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, video);
+      } catch {
+        // video not ready yet
+      }
+
+      // Pack ripple uniforms
+      const posArr = new Float32Array(RIPPLE_CAPACITY * 2);
+      const ageArr = new Float32Array(RIPPLE_CAPACITY);
+      for (let i = 0; i < ripples.length; i++) {
+        posArr[i * 2] = ripples[i].pos.x;
+        posArr[i * 2 + 1] = ripples[i].pos.y;
+        ageArr[i] = (now - ripples[i].born) / RIPPLE_LIFETIME_MS;
+      }
+
+      gl!.useProgram(program);
+      gl!.uniform1i(uTex, 0);
+      gl!.uniform1f(uTime, t);
+      gl!.uniform1i(uRippleCount, ripples.length);
+      gl!.uniform2fv(uRipplePos, posArr);
+      gl!.uniform1fv(uRippleAge, ageArr);
+      gl!.uniform1f(uAspect, canvas.width / canvas.height);
+
+      gl!.clear(gl!.COLOR_BUFFER_BIT);
+      gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, 4);
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function dist(a: Vec2, b: Vec2): number {
+    const dx = a.x - b.x, dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function buildProgram(gl: WebGLRenderingContext): WebGLProgram {
+    const vs = `
+      attribute vec2 a_position;
+      attribute vec2 a_uv;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = a_uv;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const fs = `
+      precision mediump float;
+      varying vec2 v_uv;
+      uniform sampler2D u_tex;
+      uniform float u_time;
+      uniform float u_aspect;
+      uniform int u_rippleCount;
+      uniform vec2 u_ripplePos[${RIPPLE_CAPACITY}];
+      uniform float u_rippleAge[${RIPPLE_CAPACITY}]; // 0..1, where 1 = expired
+
+      // Mirror the camera so it feels like a selfie
+      vec2 sampleUv(vec2 uv) {
+        return vec2(1.0 - uv.x, uv.y);
+      }
+
+      void main() {
+        vec2 uv = v_uv;
+        vec2 disp = vec2(0.0);
+
+        // Ambient gentle wave so the surface always feels alive
+        disp.x += sin(uv.y * 14.0 + u_time * 0.8) * 0.0015;
+        disp.y += cos(uv.x * 12.0 + u_time * 0.7) * 0.0015;
+
+        // Per-ripple displacement
+        for (int i = 0; i < ${RIPPLE_CAPACITY}; i++) {
+          if (i >= u_rippleCount) break;
+          vec2 c = u_ripplePos[i];
+          float age = u_rippleAge[i];           // 0 = fresh, 1 = expired
+          float life = 1.0 - age;               // 1 = fresh, 0 = expired
+
+          vec2 d = uv - c;
+          d.x *= u_aspect;                      // correct for non-square canvas
+          float r = length(d);
+
+          // Expanding ring: peak amplitude moves outward as the ripple ages
+          float ringRadius = age * 0.45;
+          float ringWidth = 0.12;
+          float ring = exp(-pow((r - ringRadius) / ringWidth, 2.0));
+
+          // Falloff with distance from center & with age
+          float amp = 0.045 * ring * pow(life, 1.2);
+
+          // Direction radially outward, with a sin term for liquid wobble
+          vec2 dir = r > 0.0001 ? d / r : vec2(0.0);
+          float wobble = sin(r * 60.0 - u_time * 6.0 - age * 8.0);
+          disp += dir * amp * wobble;
+        }
+
+        // Chromatic aberration for the "glass" feel
+        float ca = 0.004 * length(disp) * 60.0;
+        vec2 dir = length(disp) > 0.0 ? normalize(disp) : vec2(1.0, 0.0);
+
+        vec3 col;
+        col.r = texture2D(u_tex, sampleUv(uv + disp + dir * ca)).r;
+        col.g = texture2D(u_tex, sampleUv(uv + disp)).g;
+        col.b = texture2D(u_tex, sampleUv(uv + disp - dir * ca)).b;
+
+        // Subtle highlight on ripple ridges to enhance the glass look
+        float highlight = 0.0;
+        for (int i = 0; i < ${RIPPLE_CAPACITY}; i++) {
+          if (i >= u_rippleCount) break;
+          vec2 c = u_ripplePos[i];
+          float age = u_rippleAge[i];
+          float life = 1.0 - age;
+          vec2 d = uv - c; d.x *= u_aspect;
+          float r = length(d);
+          float ringRadius = age * 0.45;
+          float ring = exp(-pow((r - ringRadius) / 0.04, 2.0));
+          highlight += ring * life * 0.18;
+        }
+        col += vec3(highlight);
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    const v = compile(gl, gl.VERTEX_SHADER, vs);
+    const f = compile(gl, gl.FRAGMENT_SHADER, fs);
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, v);
+    gl.attachShader(prog, f);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      throw new Error('Shader link failed: ' + gl.getProgramInfoLog(prog));
+    }
+    return prog;
+  }
+
+  function compile(gl: WebGLRenderingContext, type: number, src: string): WebGLShader {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      throw new Error('Shader compile failed: ' + gl.getShaderInfoLog(sh));
+    }
+    return sh;
+  }
+</script>
