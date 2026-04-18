@@ -35,7 +35,8 @@
       "Bash(npx --yes --package=puppeteer node /tmp/capture.mjs)",
       "Bash(node capture.mjs)",
       "Bash(lsof -ti:4321)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(npx vercel *)"
     ]
   }
 }
