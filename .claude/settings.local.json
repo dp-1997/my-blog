@@ -37,7 +37,8 @@
       "Bash(lsof -ti:4321)",
       "Bash(xargs kill:*)",
       "Bash(npx vercel *)",
-      "Bash(node --input-type=module -e ' *)"
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(vercel ls *)"
     ]
   }
 }
