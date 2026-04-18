@@ -8,6 +8,7 @@ interface Props {
 
 const { title, description = "Essays, notes, and side projects by Damian Pickett." } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageURL = new URL('/og-image.png', Astro.site).toString();
 ---
 
 <!doctype html>
@@ -26,9 +27,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
 
     <!-- Set theme before paint to avoid FOUC. Default = light. -->
     <script is:inline>

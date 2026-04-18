@@ -36,7 +36,8 @@
       "Bash(node capture.mjs)",
       "Bash(lsof -ti:4321)",
       "Bash(xargs kill:*)",
-      "Bash(npx vercel *)"
+      "Bash(npx vercel *)",
+      "Bash(node --input-type=module -e ' *)"
     ]
   }
 }
