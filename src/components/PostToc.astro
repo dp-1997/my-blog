@@ -186,80 +186,85 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 </style>
 
 <script>
-  const root = document.querySelector('[data-toc]');
-  if (root) {
-    const btn = root.querySelector('.toc-toggle') as HTMLButtonElement;
-    const panel = root.querySelector('.toc-panel') as HTMLElement;
-    const allLinks = root.querySelectorAll<HTMLAnchorElement>('.toc-list a');
-
-    // ── Mobile toggle ──
-    let isOpen = false;
+  // Delegated, wired-once listeners: state is derived from the current DOM,
+  // so the TOC works across view-transition swaps without any rebinding.
+  const w = window as Window & { __tocWired?: boolean };
+  if (!w.__tocWired) {
+    w.__tocWired = true;
     let closeTimer: number | undefined;
 
-    function open() {
+    const parts = () => {
+      const root = document.querySelector('[data-toc]');
+      if (!root) return null;
+      return {
+        root,
+        btn: root.querySelector('.toc-toggle') as HTMLButtonElement,
+        panel: root.querySelector('.toc-panel') as HTMLElement,
+      };
+    };
+
+    function open(p: NonNullable<ReturnType<typeof parts>>) {
       if (closeTimer) {
         window.clearTimeout(closeTimer);
         closeTimer = undefined;
       }
-      panel.hidden = false;
-      void panel.offsetWidth;
-      panel.classList.add('is-open');
-      btn.setAttribute('aria-expanded', 'true');
-      isOpen = true;
+      p.panel.hidden = false;
+      void p.panel.offsetWidth;
+      p.panel.classList.add('is-open');
+      p.btn.setAttribute('aria-expanded', 'true');
     }
 
-    function close() {
+    function close(p: NonNullable<ReturnType<typeof parts>>) {
+      const panel = p.panel;
       panel.classList.remove('is-open');
-      btn.setAttribute('aria-expanded', 'false');
-      isOpen = false;
+      p.btn.setAttribute('aria-expanded', 'false');
       closeTimer = window.setTimeout(() => {
         panel.hidden = true;
       }, 220);
     }
 
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      isOpen ? close() : open();
-    });
+    const isOpen = (p: NonNullable<ReturnType<typeof parts>>) =>
+      p.btn.getAttribute('aria-expanded') === 'true';
 
     document.addEventListener('click', (e) => {
-      if (isOpen && !root.contains(e.target as Node)) close();
+      const p = parts();
+      if (!p || !(e.target instanceof Element)) return;
+      if (e.target.closest('.toc-toggle')) {
+        isOpen(p) ? close(p) : open(p);
+      } else if (e.target.closest('.toc-list a')) {
+        // Native fragment navigation handles scroll and focus; just close.
+        if (isOpen(p)) close(p);
+      } else if (isOpen(p) && !p.root.contains(e.target)) {
+        close(p);
+      }
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isOpen) close();
-    });
-
-    // ── Native fragment navigation handles scroll (CSS smooth-scroll)
-    //    and moves keyboard focus to the target; we only close the panel. ──
-    allLinks.forEach((link) => {
-      link.addEventListener('click', () => {
-        if (isOpen) close();
-      });
+      if (e.key !== 'Escape') return;
+      const p = parts();
+      if (p && isOpen(p)) close(p);
     });
 
     // ── Active heading tracking (desktop sidebar) ──
-    const headingEls = Array.from(allLinks)
-      .map(a => {
-        const href = a.getAttribute('href');
-        return href ? document.getElementById(href.slice(1)) : null;
-      })
-      .filter(Boolean) as HTMLElement[];
-
     function updateActive() {
+      const p = parts();
+      if (!p) return;
+      const links = p.root.querySelectorAll<HTMLAnchorElement>('.toc-list a');
       let current = '';
-      for (const heading of headingEls) {
-        if (heading.getBoundingClientRect().top <= 120) {
+      links.forEach((a) => {
+        const href = a.getAttribute('href');
+        const heading = href ? document.getElementById(href.slice(1)) : null;
+        if (heading && heading.getBoundingClientRect().top <= 120) {
           current = heading.id;
         }
-      }
-      allLinks.forEach(a => {
-        const href = a.getAttribute('href');
-        a.classList.toggle('is-active', href === `#${current}`);
+      });
+      links.forEach((a) => {
+        a.classList.toggle('is-active', a.getAttribute('href') === `#${current}`);
       });
     }
 
     window.addEventListener('scroll', updateActive, { passive: true });
+    document.addEventListener('astro:page-load', updateActive);
     updateActive();
   }
 </script>

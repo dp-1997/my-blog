@@ -163,8 +163,16 @@
 
   const MODE_INDEX: Record<Mode, number> = { glass: 0, wand: 1, saber: 2 };
 
+  let activeStream: MediaStream | null = null;
+  let cancelled = false;
+
+  // Wired via astro:page-load so the demo survives client-side navigation.
+  // Everything below (through start()) runs per visit to this page.
+  function initDemo() {
   const demo = document.querySelector<HTMLElement>('.lg-demo');
-  if (!demo) throw new Error('LiquidGlassDemo: root element not found');
+  if (!demo || (demo as HTMLElement & { __wired?: boolean; }).__wired) return;
+  (demo as HTMLElement & { __wired?: boolean; }).__wired = true;
+  cancelled = false;
 
   const tabs = demo.querySelector<HTMLDivElement>('.lg-tabs')!;
   const tabButtons = Array.from(demo.querySelectorAll<HTMLButtonElement>('.lg-tab'));
@@ -220,6 +228,7 @@
       audio: false,
     });
     video.srcObject = stream;
+    activeStream = stream;
     await video.play();
 
     // 2. WebGL
@@ -324,6 +333,7 @@
     let handBase: Vec2 | null = null;
 
     function frame() {
+      if (cancelled) return;
       const now = performance.now();
       const dt = Math.min(0.05, (now - lastFrameTs) / 1000);
       lastFrameTs = now;
@@ -458,6 +468,19 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  }
+  }
+
+  // Wired-once guard: dev-mode navigation can re-execute this script.
+  const w = window as Window & { __lgWired?: boolean };
+  if (!w.__lgWired) {
+    w.__lgWired = true;
+    document.addEventListener('astro:page-load', initDemo);
+    document.addEventListener('astro:before-swap', () => {
+      cancelled = true;
+      activeStream?.getTracks().forEach((t) => t.stop());
+      activeStream = null;
+    });
   }
 
   function dist(a: Vec2, b: Vec2): number {

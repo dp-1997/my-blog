@@ -89,6 +89,35 @@ a { color: inherit; }
   border-radius: 1px;
 }
 
+/* ═══ Page transitions — the dolly move ═══
+   Navigating dollies forward: the old page slides past you, slightly
+   blurred with speed; the new one arrives from just ahead and settles. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-depart 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-arrive 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes vt-depart {
+    to {
+      transform: scale(1.06);
+      opacity: 0;
+      filter: blur(5px);
+    }
+  }
+
+  @keyframes vt-arrive {
+    from {
+      transform: scale(0.94);
+      opacity: 0;
+      filter: blur(5px);
+    }
+  }
+}
+
 /* ── Mono label: the structural voice ── */
 .label {
   font-family: var(--font-mono);

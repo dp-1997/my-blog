@@ -1,0 +1,178 @@
+---
+// Scroll sparks: motion answers motion. While you scroll, small sparks
+// stream up the page's side margins and fade as it settles; a still page
+// stays perfectly still. Confined to the gutters — never behind the text.
+// Persisted across view transitions; zero work while idle (the loop stops
+// when the last spark dies). Honours prefers-reduced-motion.
+---
+
+<canvas class="sparks" aria-hidden="true" transition:persist="sparks"></canvas>
+
+<style>
+  .sparks {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  function initSparks() {
+    const w = window as Window & { __sparksWired?: boolean };
+    if (w.__sparksWired) return;
+    const canvas = document.querySelector<HTMLCanvasElement>('.sparks');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!canvas || reduced.matches) return;
+    w.__sparksWired = true;
+
+    const ctx = canvas.getContext('2d')!;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let vw = 0;
+    let vh = 0;
+
+    function resize() {
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+      canvas!.width = Math.round(vw * dpr);
+      canvas!.height = Math.round(vh * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Palette follows the theme tokens.
+    let inkRGB = '32, 27, 21';
+    let accentRGB = '163, 74, 42';
+    function hexToRGB(hex: string): string {
+      const v = hex.trim().replace('#', '');
+      const n = v.length === 3 ? v.split('').map((c) => c + c).join('') : v;
+      const num = parseInt(n, 16);
+      return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+    }
+    function readTheme() {
+      const styles = getComputedStyle(document.documentElement);
+      const ink = styles.getPropertyValue('--ink');
+      const accent = styles.getPropertyValue('--accent');
+      if (ink) inkRGB = hexToRGB(ink);
+      if (accent) accentRGB = hexToRGB(accent);
+    }
+    readTheme();
+    new MutationObserver(readTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    interface Spark {
+      x: number;
+      y: number;
+      vy: number;
+      sway: number;
+      age: number;
+      life: number;
+      r: number;
+      accent: boolean;
+    }
+
+    let sparks: Spark[] = [];
+    let raf = 0;
+    let looping = false;
+    let last = 0;
+
+    // The side margins: the empty paper either side of the content column.
+    function gutterWidth(): number {
+      const sidePad = vw <= 640 ? 20 : 32;
+      const content = Math.min(1080, vw - sidePad * 2);
+      return Math.max((vw - content) / 2, sidePad);
+    }
+
+    function spawn(intensity: number) {
+      const gutter = gutterWidth();
+      const left = Math.random() < 0.5;
+      const inset = 6 + Math.random() * Math.max(gutter - 16, 10);
+      sparks.push({
+        x: left ? inset : vw - inset,
+        y: vh * (0.25 + Math.random() * 0.75),
+        vy: -(70 + Math.random() * 60 + intensity * 2),
+        sway: Math.random() * Math.PI * 2,
+        age: 0,
+        life: 0.7 + Math.random() * 0.6,
+        r: 0.8 + Math.random() * 1.6,
+        accent: Math.random() < 0.4,
+      });
+    }
+
+    function frame(now: number) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      ctx.clearRect(0, 0, vw, vh);
+
+      const keep: Spark[] = [];
+      for (const s of sparks) {
+        s.age += dt;
+        if (s.age >= s.life || s.y < -8) continue;
+        s.y += s.vy * dt;
+        s.sway += dt * 3;
+        s.x += Math.sin(s.sway) * 8 * dt;
+
+        const p = s.age / s.life;
+        const alpha = Math.pow(1 - p, 1.6) * 0.5;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${s.accent ? accentRGB : inkRGB}, ${alpha.toFixed(3)})`;
+        ctx.fill();
+        keep.push(s);
+      }
+      sparks = keep;
+
+      if (sparks.length > 0) {
+        raf = requestAnimationFrame(frame);
+      } else {
+        looping = false;
+        ctx.clearRect(0, 0, vw, vh);
+      }
+    }
+
+    function wake() {
+      if (looping) return;
+      looping = true;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    let lastY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const dy = window.scrollY - lastY;
+      lastY = window.scrollY;
+      const speed = Math.abs(dy);
+      // A jump this size is a navigation or anchor teleport, not a scroll.
+      if (speed > 400 || speed === 0) return;
+      let quota = Math.min(speed / 9, 4);
+      while (quota > 0) {
+        if (Math.random() < quota) spawn(Math.min(speed, 50));
+        quota -= 1;
+      }
+      if (sparks.length > 90) sparks.splice(0, sparks.length - 90);
+      wake();
+    }, { passive: true });
+
+    // Keep the scroll origin honest across view-transition navigations.
+    document.addEventListener('astro:page-load', () => {
+      lastY = window.scrollY;
+    });
+
+    reduced.addEventListener('change', (e) => {
+      if (e.matches) {
+        sparks = [];
+        cancelAnimationFrame(raf);
+        looping = false;
+        ctx.clearRect(0, 0, vw, vh);
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initSparks);
+</script>

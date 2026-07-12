@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import Mark from '../components/Mark.astro';
-import Thoughts from '../components/Thoughts.astro';
+import Sparks from '../components/Sparks.astro';
 
 interface Props {
   title: string;
@@ -59,19 +60,28 @@ function isCurrent(href: string): boolean {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
 
-    <!-- Set theme before paint to avoid FOUC. Default = light. -->
+    <ClientRouter />
+
+    <!-- Set theme before paint to avoid FOUC (default = light), and re-apply
+         after view-transition swaps, which reset <html> attributes. -->
     <script is:inline>
       (function () {
-        try {
-          if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          }
-        } catch (e) {}
+        function applyTheme() {
+          try {
+            if (localStorage.getItem('theme') === 'dark') {
+              document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+              document.documentElement.removeAttribute('data-theme');
+            }
+          } catch (e) {}
+        }
+        applyTheme();
+        document.addEventListener('astro:after-swap', applyTheme);
       })();
     </script>
   </head>
   <body>
-    <Thoughts />
+    <Sparks />
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header">
@@ -99,22 +109,31 @@ function isCurrent(href: string): boolean {
     </header>
 
     <script>
-      const btn = document.querySelector('.theme-toggle');
-      const root = document.documentElement;
-      const reflect = () =>
-        btn?.setAttribute('aria-pressed', String(root.getAttribute('data-theme') === 'dark'));
-      reflect();
-      btn?.addEventListener('click', () => {
-        const isDark = root.getAttribute('data-theme') === 'dark';
-        if (isDark) {
-          root.removeAttribute('data-theme');
-          try { localStorage.setItem('theme', 'light'); } catch (e) {}
-        } else {
-          root.setAttribute('data-theme', 'dark');
-          try { localStorage.setItem('theme', 'dark'); } catch (e) {}
-        }
+      // One delegated, wired-once listener: view transitions swap the button
+      // on every navigation, and scripts may re-execute — delegation plus the
+      // guard make both irrelevant. aria-pressed re-syncs on each arrival.
+      const w = window as Window & { __themeWired?: boolean };
+      if (!w.__themeWired) {
+        w.__themeWired = true;
+        const root = document.documentElement;
+        const reflect = () =>
+          document.querySelector('.theme-toggle')
+            ?.setAttribute('aria-pressed', String(root.getAttribute('data-theme') === 'dark'));
+        document.addEventListener('click', (e) => {
+          if (!(e.target instanceof Element) || !e.target.closest('.theme-toggle')) return;
+          const isDark = root.getAttribute('data-theme') === 'dark';
+          if (isDark) {
+            root.removeAttribute('data-theme');
+            try { localStorage.setItem('theme', 'light'); } catch (err) {}
+          } else {
+            root.setAttribute('data-theme', 'dark');
+            try { localStorage.setItem('theme', 'dark'); } catch (err) {}
+          }
+          reflect();
+        });
         reflect();
-      });
+        document.addEventListener('astro:page-load', reflect);
+      }
     </script>
 
     <main id="main">
