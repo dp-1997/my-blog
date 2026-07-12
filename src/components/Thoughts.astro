@@ -1,0 +1,223 @@
+---
+// The ambient layer: the mark's rising thoughts, set loose behind the page.
+// Faint particles drift upward in three depths, scatter when the pointer
+// reaches for them, and bloom where you click. Pure canvas, no dependencies.
+// Honours prefers-reduced-motion (renders nothing) and pauses when hidden.
+---
+
+<canvas class="thoughts" aria-hidden="true"></canvas>
+
+<style>
+  .thoughts {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const canvas = document.querySelector<HTMLCanvasElement>('.thoughts')!;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (!reduced.matches && canvas) {
+    const ctx = canvas.getContext('2d')!;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let w = 0;
+    let h = 0;
+    let running = true;
+    let raf = 0;
+
+    // Palette is read from the design tokens so the layer follows the theme.
+    let inkRGB = '32, 27, 21';
+    let accentRGB = '163, 74, 42';
+
+    function hexToRGB(hex: string): string {
+      const v = hex.trim().replace('#', '');
+      const n = v.length === 3 ? v.split('').map((c) => c + c).join('') : v;
+      const num = parseInt(n, 16);
+      return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+    }
+
+    function readTheme() {
+      const styles = getComputedStyle(document.documentElement);
+      const ink = styles.getPropertyValue('--ink');
+      const accent = styles.getPropertyValue('--accent');
+      if (ink) inkRGB = hexToRGB(ink);
+      if (accent) accentRGB = hexToRGB(accent);
+    }
+
+    readTheme();
+    new MutationObserver(readTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    interface Thought {
+      x: number;
+      y: number;
+      depth: number;   // 0 far … 1 near
+      accent: boolean;
+      age: number;     // seconds lived
+      life: number;    // seconds total
+      sway: number;    // horizontal sway phase
+      swayAmp: number;
+      vx: number;      // transient pointer-induced drift
+      burst: boolean;  // click-born thoughts are brighter and briefer
+    }
+
+    let thoughts: Thought[] = [];
+
+    function spawn(x?: number, y?: number, burst = false): Thought {
+      const depth = Math.random();
+      return {
+        x: x ?? Math.random() * w,
+        y: y ?? h + 10,
+        depth,
+        accent: Math.random() < 0.38,
+        age: 0,
+        life: burst ? 2.5 + Math.random() * 1.5 : 9 + Math.random() * 13,
+        sway: Math.random() * Math.PI * 2,
+        swayAmp: 6 + Math.random() * 14,
+        vx: burst ? (Math.random() - 0.5) * 30 : 0,
+        burst,
+      };
+    }
+
+    function targetCount(): number {
+      return Math.round(Math.min(70, (w * h) / 26000));
+    }
+
+    function resize() {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Seed mid-flight so the page doesn't start empty.
+    for (let i = 0; i < targetCount(); i++) {
+      const t = spawn(Math.random() * w, Math.random() * h);
+      t.age = Math.random() * t.life * 0.6;
+      thoughts.push(t);
+    }
+
+    // Pointer: thoughts scatter gently when you reach for them.
+    const pointer = { x: -9999, y: -9999 };
+    window.addEventListener('pointermove', (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+    }, { passive: true });
+    window.addEventListener('pointerleave', () => {
+      pointer.x = -9999;
+      pointer.y = -9999;
+    });
+
+    // Click: a small bloom of thoughts where curiosity landed.
+    window.addEventListener('click', (e) => {
+      if (thoughts.length > 110) return;
+      for (let i = 0; i < 5; i++) {
+        thoughts.push(spawn(
+          e.clientX + (Math.random() - 0.5) * 14,
+          e.clientY + (Math.random() - 0.5) * 14,
+          true,
+        ));
+      }
+    });
+
+    let last = performance.now();
+
+    function frame(now: number) {
+      if (!running) return;
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const keep: Thought[] = [];
+      for (const t of thoughts) {
+        t.age += dt;
+        if (t.age >= t.life) continue;
+
+        // Rise: nearer thoughts move faster; bursts leap a little.
+        const rise = (8 + t.depth * 16) * (t.burst ? 2.2 : 1);
+        t.y -= rise * dt;
+        t.sway += dt * (0.4 + t.depth * 0.5);
+        t.vx *= 0.94;
+
+        // Scatter softly away from the pointer.
+        const dx = t.x - pointer.x;
+        const dy = t.y - pointer.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 110 * 110 && d2 > 0.01) {
+          const d = Math.sqrt(d2);
+          const push = (1 - d / 110) * 46;
+          t.vx += (dx / d) * push * dt * 4;
+          t.y += (dy / Math.max(d, 1)) * push * dt * 1.4;
+        }
+
+        t.x += Math.sin(t.sway) * t.swayAmp * dt + t.vx * dt;
+        if (t.y < -12) { t.age = t.life; continue; }
+
+        // Opacity: ease in, hold, ease out — like the mark's float-up.
+        const p = t.age / t.life;
+        const fade = p < 0.18 ? p / 0.18 : p > 0.7 ? (1 - p) / 0.3 : 1;
+        const base = t.burst ? 0.55 : 0.16 + t.depth * 0.3;
+        const alpha = fade * base;
+        const r = (t.burst ? 1.6 : 1) + t.depth * 2;
+        const colour = t.accent ? accentRGB : inkRGB;
+
+        // Accent thoughts glow softly — embers in the dark, komorebi in the light.
+        if (t.accent) {
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, r * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${colour}, ${(alpha * 0.28).toFixed(3)})`;
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${colour}, ${alpha.toFixed(3)})`;
+        ctx.fill();
+        keep.push(t);
+      }
+
+      thoughts = keep;
+      while (thoughts.length < targetCount()) thoughts.push(spawn());
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    raf = requestAnimationFrame(frame);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(raf);
+      } else {
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    });
+
+    reduced.addEventListener('change', (e) => {
+      if (e.matches) {
+        running = false;
+        cancelAnimationFrame(raf);
+        ctx.clearRect(0, 0, w, h);
+      } else if (!document.hidden) {
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    });
+  }
+</script>

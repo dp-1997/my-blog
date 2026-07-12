@@ -48,9 +48,30 @@ becomes `anyone-can-cook.com/work/my-project`. Images live next to the
 
 ---
 
-## Adding content
+## Adding content — the fast path
 
-Tell Claude what you want — it knows these conventions. Or by hand:
+Open Claude Code in this folder and use a slash command:
+
+| Command | What it does |
+|---|---|
+| `/new-post` | Turn pasted text (or an Apple Note — "from my note called X") into an essay or note, build, confirm, ship |
+| `/new-work` | Add a case study, build, or experiment — with a confidentiality check built in |
+| `/update-cv` | Change the CV from a plain-English instruction |
+| `/publish` | Commit whatever is pending, push, and confirm it's live |
+
+Each command formats the content to the site's conventions, runs the build,
+shows you the result, and only pushes after you say yes. Total effort: paste,
+read, say "ship it".
+
+**Away from the Mac?** Content is plain text on GitHub. Open the repo in the
+GitHub mobile app (or github.com), edit or add a file under `src/content/`,
+commit — Vercel deploys it in about 30 seconds. If the build fails (bad
+frontmatter), the site simply stays on the previous version until you or
+Claude fix it. Or just draft in Apple Notes and run `/new-post` later.
+
+## Adding content — by hand
+
+Tell Claude what you want — it knows these conventions. Or manually:
 
 ### A new essay or note
 
