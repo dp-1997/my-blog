@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import { cv } from '../data/cv';
+---
+
+<Base
+  title="CV — Damian Pickett"
+  description="The CV of Damian Pickett, Senior Product Marketer: positioning, product launches, go-to-market, and product storytelling. Manchester, UK."
+>
+  <article class="cv">
+    <div class="cv-top">
+      <div>
+        <h1>{cv.name}</h1>
+        <p class="cv-role">{cv.role} — {cv.location}</p>
+      </div>
+      <button class="cv-print-btn" type="button" onclick="window.print()">
+        Print / Save as PDF
+      </button>
+    </div>
+
+    <div class="cv-contact label">
+      <a href={`mailto:${cv.email}`}>{cv.email}</a>
+      <a href={cv.linkedin} target="_blank" rel="noopener noreferrer">linkedin.com/in/damianpickett97</a>
+      <a href={cv.website}>anyone-can-cook.com</a>
+    </div>
+
+    <section class="cv-section cv-summary" aria-labelledby="cv-summary-h">
+      <h2 class="label" id="cv-summary-h">Summary</h2>
+      {cv.summary.map((line) => <p>{line}</p>)}
+    </section>
+
+    <section class="cv-section" aria-labelledby="cv-exp-h">
+      <h2 class="label" id="cv-exp-h">Experience</h2>
+      {cv.experience.map((job) => (
+        <div class="cv-entry">
+          <span class="when label">{job.when}</span>
+          <div>
+            <h3>{job.title}</h3>
+            <p class="cv-org">{job.org}</p>
+            <ul>
+              {job.bullets.map((bullet) => <li>{bullet}</li>)}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <section class="cv-section" aria-labelledby="cv-caps-h">
+      <h2 class="label" id="cv-caps-h">Capabilities</h2>
+      <ul class="cv-caps">
+        {cv.capabilities.map((cap) => <li>{cap}</li>)}
+      </ul>
+    </section>
+
+    <section class="cv-section" aria-labelledby="cv-edu-h">
+      <h2 class="label" id="cv-edu-h">Education</h2>
+      {cv.education.map((entry) => (
+        <div class="cv-entry">
+          <span class="when label">{entry.when}</span>
+          <div>
+            <h3>{entry.title}</h3>
+            <p class="cv-org">{entry.org}</p>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <section class="cv-section cv-selected" aria-labelledby="cv-sel-h">
+      <h2 class="label" id="cv-sel-h">Selected work & writing</h2>
+      <ul>
+        {cv.selected.map((item) => (
+          <li><a href={item.href}>{item.label}</a></li>
+        ))}
+      </ul>
+    </section>
+  </article>
+</Base>

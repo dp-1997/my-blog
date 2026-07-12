@@ -61,10 +61,12 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 <style>
   /* ── Shared styles ── */
   .toc-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
     margin-bottom: 0.85rem;
   }
 
@@ -96,19 +98,21 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   }
 
   .toc-item a:hover {
-    color: var(--fg);
+    color: var(--ink);
   }
 
   .toc-item a.is-active {
-    color: var(--fg);
+    color: var(--ink);
   }
 
   /* ── Desktop: always-visible sidebar ── */
   .toc-sidebar {
     position: fixed;
-    top: 8rem;
-    left: calc(50% + 370px);
-    width: 210px;
+    top: 9rem;
+    left: calc(50% + 355px);
+    width: 200px;
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
   }
 
   /* Hide mobile elements on desktop */
@@ -135,19 +139,19 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: var(--fg);
-      color: var(--bg);
+      background: var(--ink);
+      color: var(--paper);
       border: none;
       cursor: pointer;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 14px var(--shadow-strong);
+      box-shadow: 0 4px 14px var(--shadow);
       transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
 
     .toc-toggle:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 18px var(--shadow-strong);
+      box-shadow: 0 6px 18px var(--shadow);
     }
 
     .toc-panel {
@@ -158,11 +162,11 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       width: 280px;
       max-height: 60vh;
       overflow-y: auto;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: var(--paper);
+      border: 1px solid var(--rule);
       border-radius: 12px;
       padding: 1.25rem 1.4rem;
-      box-shadow: 0 10px 30px var(--shadow-strong);
+      box-shadow: 0 10px 30px var(--shadow);
       opacity: 0;
       transform: translateY(8px);
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -226,17 +230,11 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       if (e.key === 'Escape' && isOpen) close();
     });
 
-    // ── Smooth scroll for all TOC links ──
+    // ── Native fragment navigation handles scroll (CSS smooth-scroll)
+    //    and moves keyboard focus to the target; we only close the panel. ──
     allLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const href = link.getAttribute('href');
-        if (!href) return;
-        const target = document.getElementById(href.slice(1));
-        if (!target) return;
+      link.addEventListener('click', () => {
         if (isOpen) close();
-        target.scrollIntoView({ block: 'start' });
-        history.replaceState(null, '', href);
       });
     });
 

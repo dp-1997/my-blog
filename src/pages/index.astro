@@ -2,74 +2,156 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 
-const [essayEntries, noteEntries, projectEntries] = await Promise.all([
+const [workEntries, essayEntries, noteEntries] = await Promise.all([
+  getCollection('work'),
   getCollection('essays'),
   getCollection('notes'),
-  getCollection('projects'),
 ]);
 
-type Category = 'essay' | 'note' | 'project';
+const featuredWork = workEntries
+  .filter((w) => w.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 5);
 
-const posts = [
-  ...essayEntries.map(p =>   ({ ...p, category: 'essay'   as Category, href: `/essays/${p.id}`   })),
-  ...noteEntries.map(p =>    ({ ...p, category: 'note'    as Category, href: `/notes/${p.id}`    })),
-  ...projectEntries.map(p => ({ ...p, category: 'project' as Category, href: `/projects/${p.id}` })),
-].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const [lead, ...rest] = featuredWork;
+
+const writing = [
+  ...essayEntries.map((e) => ({ ...e, href: `/essays/${e.id}/`, kind: 'Essay' })),
+  ...noteEntries.map((n) => ({ ...n, href: `/notes/${n.id}/`, kind: 'Note' })),
+]
+  .sort((a, b) => {
+    if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+    return b.data.date.getTime() - a.data.date.getTime();
+  })
+  .slice(0, 3);
 
 function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10).toUpperCase();
+  return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
-
-const latest = posts[0];
-const filters = ['essay', 'note', 'project'] as const;
 ---
 
 <Base
-  title="Anyone Can Cook"
-  description="Essays, notes, and side projects."
+  title="Damian Pickett — Anyone Can Cook"
+  description="Product marketer and maker in Manchester. I find the idea that makes a product matter, tell it plainly, and build the proof."
 >
-  <h1 class="section-heading">Thoughts</h1>
+  <!-- Intro -->
+  <section class="masthead">
+    <h1>Damian Pickett</h1>
+    <p class="dek">
+      Product marketer and maker. I find the idea that makes a product matter,
+      tell it <em>plainly</em>, and build the proof.
+    </p>
+    <div class="masthead-meta">
+      <span class="label">Senior Product Marketer, SmartSurvey</span>
+      <span class="label">Manchester, UK</span>
+      <a class="label" href="mailto:damianpickett1997@gmail.com">Email me</a>
+      <a class="label" href="#work-heading">Selected work ↓</a>
+    </div>
+    <p class="masthead-creed">
+      The name is a creed borrowed from a Pixar rat: not everyone can become a great
+      artist, but a great artist can come from anywhere.
+      <a href="/essays/anyone-can-cook/">The essay explains</a>.
+    </p>
+  </section>
 
-  <nav class="post-filters" aria-label="Filter posts by type">
-    {filters.map(f => (
-      <button class="post-filter" data-filter={f}>{f}s</button>
-    ))}
-  </nav>
+  <!-- Selected work -->
+  <section class="section" aria-labelledby="work-heading">
+    <div class="section-head">
+      <h2 class="label" id="work-heading">№ 1 — Selected Work</h2>
+      <a class="section-head-link" href="/work/">All work →</a>
+    </div>
 
-  <ul class="post-list">
-    {posts.map((post, i) => (
-      <li class="post-list-item" data-category={post.category}>
-        <a href={post.href}>{post.data.title}</a>
-        <span class="post-type-tag">{post.category}</span>
-        {i === 0 && <span class="post-list-new">(new)</span>}
+    {lead && (
+      <a class="feature feature--lead" href={`/work/${lead.id}/`}>
+        <span class="kicker label">{lead.data.kicker}</span>
+        <h3>{lead.data.title}</h3>
+        <p class="outcome">{lead.data.summary}</p>
+        <span class="goes">Read the case</span>
+      </a>
+    )}
+
+    {rest.length > 0 && (
+      <div class="feature-row">
+        {rest.map((w) => (
+          <a class="feature" href={`/work/${w.id}/`}>
+            <span class="kicker label">{w.data.kicker}</span>
+            <h3>{w.data.title}</h3>
+            <p class="outcome">{w.data.summary}</p>
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- Experience -->
+  <section class="section" aria-labelledby="exp-heading">
+    <div class="section-head">
+      <h2 class="label" id="exp-heading">№ 2 — Experience</h2>
+      <a class="section-head-link" href="/cv/">Full CV →</a>
+    </div>
+
+    <ul class="exp-list">
+      <li class="exp-item">
+        <span class="when label">2024–Present</span>
+        <p class="what">
+          <strong>SmartSurvey — Senior Product Marketer</strong>
+          <span>Positioning, launches, and go-to-market for a UK experience-management platform.</span>
+        </p>
       </li>
+      <li class="exp-item">
+        <span class="when label">2022–2024</span>
+        <p class="what">
+          <strong>Invevo — First marketing hire</strong>
+          <span>A marketing department of one at a B2B fintech SaaS — brand, site, content, and demand.</span>
+        </p>
+      </li>
+      <li class="exp-item">
+        <span class="when label">2017–2022</span>
+        <p class="what">
+          <strong>The road in</strong>
+          <span>Broadcast journalism at Salford — placements with BBC Sport, Manchester United, and Salford FC — then a first marketing role that turned the story-finding into a career.</span>
+        </p>
+      </li>
+    </ul>
+
+    <div class="capabilities">
+      <span class="label">Capabilities</span>
+      <p>
+        Positioning and messaging. Product launches. Customer and competitive research.
+        Product storytelling and demos. Sales enablement. Editorial writing.
+        AI-assisted building — this site included.
+      </p>
+    </div>
+  </section>
+
+  <!-- Writing -->
+  <section class="section" aria-labelledby="writing-heading">
+    <div class="section-head">
+      <h2 class="label" id="writing-heading">№ 3 — Writing</h2>
+      <a class="section-head-link" href="/writing/">All writing →</a>
+    </div>
+
+    {writing.map((piece) => (
+      <a class="essay-entry" href={piece.href}>
+        <span class="kicker label">
+          {piece.data.featured ? 'The founding essay' : piece.kind} · {formatDate(piece.data.date)}
+        </span>
+        <h3>{piece.data.title}</h3>
+        {piece.data.summary && <p class="summary">{piece.data.summary}</p>}
+      </a>
     ))}
-  </ul>
+  </section>
 
-  {latest && (
-    <p class="post-list-footer">{formatDate(latest.data.date)}</p>
-  )}
+  <!-- Closing -->
+  <section class="closing" aria-label="Contact">
+    <p>
+      If you’re building something good and need it understood —
+      I’d like to hear about it.
+    </p>
+    <div class="contact-row">
+      <a href="mailto:damianpickett1997@gmail.com">damianpickett1997@gmail.com</a>
+      <a href="https://www.linkedin.com/in/damianpickett97" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a href="https://x.com/DamianPickett_" target="_blank" rel="noopener noreferrer">X</a>
+    </div>
+  </section>
 </Base>
-
-<script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>('.post-filter');
-  const items = document.querySelectorAll<HTMLLIElement>('.post-list-item');
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const filter = btn.dataset.filter!;
-      const isActive = btn.classList.contains('active');
-
-      if (isActive) {
-        btn.classList.remove('active');
-        items.forEach(item => item.style.display = '');
-      } else {
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        items.forEach(item => {
-          item.style.display = item.dataset.category === filter ? '' : 'none';
-        });
-      }
-    });
-  });
-</script>

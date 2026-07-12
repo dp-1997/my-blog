@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const workEntries = (await getCollection('work')).sort((a, b) => {
+  if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+  return b.data.date.getTime() - a.data.date.getTime();
+});
+---
+
+<Base
+  title="Work — Damian Pickett"
+  description="Selected work by Damian Pickett: product launches, case studies, builds, and experiments."
+>
+  <div class="page-intro">
+    <h1>Work</h1>
+    <p class="dek">
+      Case studies, builds, and experiments. Fewer, better —
+      each one here because it proves something.
+    </p>
+  </div>
+
+  <section class="section" aria-label="All work">
+    {workEntries.map((w) => (
+      <a class="feature" href={`/work/${w.id}/`}>
+        <span class="kicker label">{w.data.kicker}</span>
+        <h2 class="feature-title--index">{w.data.title}</h2>
+        <p class="outcome">{w.data.summary}</p>
+      </a>
+    ))}
+  </section>
+</Base>

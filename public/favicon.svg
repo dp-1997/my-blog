@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
   <!-- thought particles -->
-  <circle cx="40" cy="38" r="3.0" fill="#1C1917"/>
-  <circle cx="26" cy="33" r="2.4" fill="#C4715A"/>
-  <circle cx="54" cy="33" r="2.6" fill="#C4715A"/>
-  <circle cx="14" cy="22" r="1.8" fill="#1C1917"/>
-  <circle cx="40" cy="20" r="2.8" fill="#1C1917"/>
-  <circle cx="65" cy="22" r="2.0" fill="#C4715A"/>
-  <circle cx="24" cy="9"  r="1.6" fill="#C4715A"/>
-  <circle cx="56" cy="9"  r="1.8" fill="#1C1917"/>
+  <circle cx="40" cy="38" r="3.0" fill="#201B15"/>
+  <circle cx="26" cy="33" r="2.4" fill="#A34A2A"/>
+  <circle cx="54" cy="33" r="2.6" fill="#A34A2A"/>
+  <circle cx="14" cy="22" r="1.8" fill="#201B15"/>
+  <circle cx="40" cy="20" r="2.8" fill="#201B15"/>
+  <circle cx="65" cy="22" r="2.0" fill="#A34A2A"/>
+  <circle cx="24" cy="9"  r="1.6" fill="#A34A2A"/>
+  <circle cx="56" cy="9"  r="1.8" fill="#201B15"/>
   <!-- central mind -->
-  <circle cx="40" cy="62" r="13" fill="#C4715A"/>
+  <circle cx="40" cy="62" r="13" fill="#A34A2A"/>
 </svg>

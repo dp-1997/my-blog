@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/projects/:slug*", "destination": "/work/:slug*", "permanent": true },
+    { "source": "/posts/:slug*", "destination": "/writing", "permanent": true }
+  ]
+}

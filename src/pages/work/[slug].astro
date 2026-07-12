@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const workEntries = await getCollection('work');
+  return workEntries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+
+const facts: Array<[string, string]> = [];
+if (data.company) facts.push(['Company', data.company]);
+if (data.role) facts.push(['Role', data.role]);
+if (data.timeframe) facts.push(['Timeframe', data.timeframe]);
+if (data.status) facts.push(['Status', data.status]);
+if (data.techStack?.length) facts.push(['Built with', data.techStack.join(', ')]);
+---
+
+<Base title={`${data.title} — Damian Pickett`} description={data.summary}>
+  <article class="article">
+    <header class="article-head">
+      <span class="kicker label">{data.kicker}</span>
+      <h1>{data.title}</h1>
+      {data.dek && <p class="dek">{data.dek}</p>}
+    </header>
+
+    {facts.length > 0 && (
+      <dl class="facts">
+        {facts.map(([term, detail]) => (
+          <div>
+            <dt>{term}</dt>
+            <dd>{detail}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <nav class="pagination" aria-label="More">
+      <a href="/work/">
+        <span class="label">← All work</span>
+      </a>
+      <a class="pg-next" href="mailto:damianpickett1997@gmail.com">
+        <span class="label">Talk about work like this →</span>
+      </a>
+    </nav>
+  </article>
+</Base>

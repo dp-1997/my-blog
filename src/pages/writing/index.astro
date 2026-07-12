@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const [essayEntries, noteEntries] = await Promise.all([
+  getCollection('essays'),
+  getCollection('notes'),
+]);
+
+const essays = essayEntries.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const notes = noteEntries.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+---
+
+<Base
+  title="Writing — Damian Pickett"
+  description="Essays and notes by Damian Pickett on product, marketing, storytelling, and making things."
+>
+  <div class="page-intro">
+    <h1>Writing</h1>
+    <p class="dek">
+      Essays and notes on product, storytelling, and who gets to make things now.
+    </p>
+  </div>
+
+  <section class="section" aria-labelledby="essays-heading">
+    <div class="section-head">
+      <h2 class="label" id="essays-heading">Essays</h2>
+    </div>
+    {essays.map((essay) => (
+      <a class="essay-entry" href={`/essays/${essay.id}/`}>
+        <span class="kicker label">
+          {essay.data.featured ? 'The founding essay' : 'Essay'} · {formatDate(essay.data.date)}
+        </span>
+        <h3>{essay.data.title}</h3>
+        {essay.data.summary && <p class="summary">{essay.data.summary}</p>}
+      </a>
+    ))}
+  </section>
+
+  {notes.length > 0 && (
+    <section class="section" aria-labelledby="notes-heading">
+      <div class="section-head">
+        <h2 class="label" id="notes-heading">Notes</h2>
+      </div>
+      {notes.map((note) => (
+        <a class="essay-entry" href={`/notes/${note.id}/`}>
+          <span class="kicker label">Note · {formatDate(note.data.date)}</span>
+          <h3>{note.data.title}</h3>
+          {note.data.summary && <p class="summary">{note.data.summary}</p>}
+        </a>
+      ))}
+    </section>
+  )}
+</Base>

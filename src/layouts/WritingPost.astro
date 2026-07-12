@@ -1,0 +1,74 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Base from './Base.astro';
+import PostToc from '../components/PostToc.astro';
+
+interface Props {
+  post: CollectionEntry<'essays'> | CollectionEntry<'notes'>;
+  kind: 'Essay' | 'Note';
+}
+
+const { post, kind } = Astro.props;
+const { Content, headings } = await render(post);
+
+// Previous / next across the whole writing stream, newest first.
+const [essayEntries, noteEntries] = await Promise.all([
+  getCollection('essays'),
+  getCollection('notes'),
+]);
+
+const stream = [
+  ...essayEntries.map((e) => ({ id: e.id, href: `/essays/${e.id}/`, title: e.data.title, date: e.data.date })),
+  ...noteEntries.map((n) => ({ id: n.id, href: `/notes/${n.id}/`, title: n.data.title, date: n.data.date })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+const currentHref = kind === 'Essay' ? `/essays/${post.id}/` : `/notes/${post.id}/`;
+const index = stream.findIndex((p) => p.href === currentHref);
+const newer = index > 0 ? stream[index - 1] : null;
+const older = index >= 0 && index < stream.length - 1 ? stream[index + 1] : null;
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+---
+
+<Base title={`${post.data.title} — Damian Pickett`} description={post.data.summary}>
+  <article class="article">
+    <header class="article-head">
+      <span class="kicker label">{kind} · {formatDate(post.data.date)}</span>
+      <h1>{post.data.title}</h1>
+      {post.data.summary && <p class="dek">{post.data.summary}</p>}
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <footer class="article-meta">
+      <span class="label">{formatDate(post.data.date)}</span>
+      {post.data.location && <span class="label">{post.data.location}</span>}
+      {post.data.tags && post.data.tags.length > 0 && (
+        <span class="label">{post.data.tags.join(' · ')}</span>
+      )}
+    </footer>
+
+    {(newer || older) && (
+      <nav class="pagination" aria-label="More writing">
+        {older && (
+          <a href={older.href}>
+            <span class="label">← Older</span>
+            <span class="pg-title">{older.title}</span>
+          </a>
+        )}
+        {newer && (
+          <a class="pg-next" href={newer.href}>
+            <span class="label">Newer →</span>
+            <span class="pg-title">{newer.title}</span>
+          </a>
+        )}
+      </nav>
+    )}
+  </article>
+  <PostToc headings={headings} />
+</Base>

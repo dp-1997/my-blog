@@ -1,21 +1,19 @@
 # anyone-can-cook — Site Guide
 
-Everything you need to know about your blog, how to maintain it, and how to work with Claude going forward.
+How the site works, how to change it, and how to work with Claude on it.
 
 ---
 
-## What we built
+## What this is
 
-A personal blog and portfolio site built with:
+The personal site of Damian Pickett: homepage, Work, Writing, About, and a web CV.
 
-- **Astro 6** — the framework that generates the site
-- **MDX** — lets you write blog posts in plain text with occasional rich embeds (images, video)
-- **Lora** (Google Fonts) — the serif typeface
-- **One CSS file** — all the styling lives in `src/styles/global.css`
-- **Vercel** — hosts the live site, redeploys automatically on every git push
-- **GitHub** (`github.com/dp-1997/my-blog`) — stores the code, triggers deploys
-
-The site is fully static — no server, no database, nothing to hack.
+- **Astro 6** — static site generator; the whole site is prebuilt HTML
+- **MDX** — writing format for essays, notes, and work entries
+- **Newsreader + JetBrains Mono** — the two typefaces; serif for voice, mono for structure
+- **One CSS file** — all styling lives in `src/styles/global.css`
+- **Vercel** — hosting; redeploys automatically on every git push
+- **GitHub** — source control; pushing to `main` deploys
 
 ---
 
@@ -25,169 +23,143 @@ The site is fully static — no server, no database, nothing to hack.
 my-blog/
 ├── src/
 │   ├── content/
-│   │   └── posts/
-│   │       └── hello-world/        ← one folder per post
-│   │           ├── index.mdx       ← the post itself
-│   │           └── anton-ego.jpg   ← images live here
+│   │   ├── essays/<slug>/index.mdx    ← long-form writing
+│   │   ├── notes/<slug>/index.mdx     ← short-form writing
+│   │   └── work/<slug>/index.mdx      ← case studies, builds, experiments
+│   ├── data/
+│   │   └── cv.ts                      ← the CV's single source of truth
 │   ├── layouts/
-│   │   └── Base.astro              ← site header, footer, fonts
-│   ├── pages/
-│   │   ├── index.astro             ← homepage (post list)
-│   │   └── posts/[slug].astro      ← individual post page
-│   └── styles/
-│       └── global.css              ← all visual styling
-├── public/
-│   └── favicon.svg                 ← site favicon
-└── astro.config.mjs                ← Astro configuration
+│   │   ├── Base.astro                 ← header, nav, footer, metadata
+│   │   └── WritingPost.astro          ← essay/note article template
+│   ├── components/
+│   │   ├── Mark.astro                 ← the rising-thoughts mark
+│   │   ├── PostToc.astro              ← table of contents on articles
+│   │   └── LiquidGlassDemo.astro      ← the WebGL experiment
+│   ├── pages/                         ← one file per route
+│   └── styles/global.css              ← the entire design system
+├── public/                            ← favicon, og-image, robots.txt
+├── vercel.json                        ← redirects (old /projects/* URLs)
+└── astro.config.mjs                   ← site URL, MDX, sitemap
 ```
+
+**The folder name is the URL slug.** `src/content/work/my-project/index.mdx`
+becomes `anyone-can-cook.com/work/my-project`. Images live next to the
+`index.mdx` that uses them.
 
 ---
 
-## Adding a new blog post
+## Adding content
 
-1. Create a new folder inside `src/content/posts/` — the folder name becomes the URL slug
-2. Create `index.mdx` inside that folder
-3. Add the frontmatter at the top, then write your post below
+Tell Claude what you want — it knows these conventions. Or by hand:
 
-**Minimum template:**
+### A new essay or note
+
+Create `src/content/essays/<slug>/index.mdx` (or `notes/`):
 
 ```mdx
 ---
-title: Your Post Title
-date: 2026-05-01
+title: The Title
+date: 2026-08-01
+summary: One sentence that sells the piece. Used as the dek and meta description.
+featured: false        # true = surfaces on the homepage
 ---
 
-Your writing goes here.
+Your writing.
 ```
 
-**Full template (with all optional fields):**
+### A new work entry
+
+Create `src/content/work/<slug>/index.mdx`:
 
 ```mdx
 ---
-title: Your Post Title
-date: 2026-05-01
-location: London, UK
-tags: [design, product]
+title: The idea, not the deliverable
+date: 2026-08-01
+kind: case-study       # case-study | build | experiment
+kicker: Company · What it was · Year
+summary: One sentence — what happened and why it mattered.
+dek: The italic line under the title.
+featured: true         # true = appears on the homepage
+order: 4               # homepage/index position; lower = earlier
+role: What you did
+timeframe: 'Q3 2026'
+company: Who for
+status: Live
 ---
-import { Image } from 'astro:assets';
-import photo from './your-photo.jpg';
 
-Your writing goes here.
-
-<Image src={photo} alt="Describe the image" />
-
-More writing.
+## The problem
+## The decision
+## What I made
+## The outcome
+## Reflection
 ```
 
-**The URL will be:** `anyone-can-cook.com/posts/your-folder-name`
+The homepage shows featured work in `order` sequence: the first entry gets
+the full-width lead treatment, the rest sit in the two-column row.
+
+### Updating the CV
+
+Edit `src/data/cv.ts` — experience, capabilities, education, selected links.
+The `/cv` page renders from it and prints cleanly (the Print button uses
+print CSS; no PDF file to maintain).
+
+### Homepage copy
+
+The masthead, experience summary, and closing are written directly in
+`src/pages/index.astro`.
 
 ---
 
-## Publishing a new post
-
-Once you've written and saved the post, run these three lines in Terminal from the project folder:
+## Publishing
 
 ```bash
-cd ~/Projects/my-blog
 git add -A
-git commit -m "new post: your title here"
+git commit -m "describe the change"
 git push
 ```
 
-Vercel picks it up automatically. Live in ~30 seconds.
+Vercel deploys in about 30 seconds.
 
 ---
 
-## Changing the favicon
+## The design system
 
-Replace the file at `public/favicon.svg` with your own SVG icon. Keep it square, keep it simple. If you want a `.png` or `.ico` instead, update the `<link>` tag in `src/layouts/Base.astro` line 16.
-
----
-
-## Changing your name / site title
-
-Open `src/layouts/Base.astro`. Line 25 has `Damian Pickett` — that's the header link. Line 19 controls the browser tab title on the homepage (currently `Damian Pickett`).
-
----
-
-## Changing the domain on Vercel
-
-1. Go to your project on vercel.com → **Domains**
-2. Click **Add Existing** and type `anyone-can-cook.com`
-3. Vercel will give you DNS records to add at your domain registrar
-4. Once added, it goes live automatically (usually within an hour)
-
----
-
-## Changing the social links
-
-Open `src/layouts/Base.astro`. Lines 49 and 55 have your X and LinkedIn URLs. Update them there. The same links appear in your Hello World post at `src/content/posts/hello-world/index.mdx` at the bottom — update those too.
-
----
-
-## Changing fonts or colours
-
-Everything visual is in `src/styles/global.css`. The key variables are at the top:
+Everything visual is variables at the top of `src/styles/global.css`:
 
 ```css
-:root {
-  --bg:     #F5F0E8;   /* background — the warm beige */
-  --fg:     #1C1917;   /* text colour */
-  --muted:  #78716C;   /* secondary text, dates */
-  --accent: #C4715A;   /* terracotta — used in blockquotes and illustration */
-  --border: #E4DDD4;   /* subtle divider lines */
-}
+--paper   #F6F1E7   /* background */
+--ink     #201B15   /* text */
+--muted   #6B6055   /* secondary text */
+--accent  #A34A2A   /* terracotta — links, markers, emphasis */
+--rule    #E0D6C4   /* hairlines */
+--wash    #EDE5D5   /* code backgrounds */
 ```
 
-The font is loaded in `src/layouts/Base.astro` line 21. To change it, swap `Lora` for any other Google Font.
+Dark theme variants live in the `[data-theme="dark"]` block. All colour
+pairs are WCAG AA verified — if you change one, re-check contrast.
+
+Conventions worth protecting:
+
+- Serif (Newsreader) carries voice; mono (JetBrains Mono) carries structure —
+  labels, kickers, dates, nav.
+- Hairline rules separate; heavy 2px rules open and close the page.
+- Typographic apostrophes (’) in template copy — MDX body text gets them
+  automatically, `.astro` files and frontmatter do not.
+- No cards, no gradients, no glassmorphism. Composition over decoration.
 
 ---
 
-## Working with Claude going forward
+## Working with Claude
 
-### New session or same session?
+Start a fresh session in this folder and say what you want:
 
-**Start a new session each time** — it's cleaner. Claude Code has a memory system set up for this project, so a new session will already know the stack, file structure, and your preferences. You don't need to re-explain anything.
+- *"Add a new essay called X — here's the draft: [paste]"*
+- *"Add the [project] case study to Work, featured, order 2"*
+- *"Update the CV — I've changed roles"*
+- *"The blockquotes feel heavy — try something lighter"*
 
-### Writing in Notion or Apple Notes
+Claude reads the conventions from this file and the code, makes the change,
+builds to verify, and can commit and push when you're happy.
 
-This workflow works perfectly:
-
-1. Write your post in Notion or Apple Notes as plain text
-2. Open Claude Code in the `my-blog` folder
-3. Paste your text and say something like:
-   > "Turn this into a new post called `my-post-title`. Date is today, location is London."
-4. Claude creates the file, formats the MDX, and you review it
-5. When happy: `git add -A && git commit -m "new post" && git push`
-
-### What to tell Claude in a new session
-
-You don't need to explain the whole setup. Just say things like:
-- *"Add a new post called X with this content: [paste]"*
-- *"Change the background colour to..."*
-- *"The blockquote styling feels too heavy, can we try..."*
-- *"Add an image to the hello-world post"*
-
-### Using Claude Code to edit
-
-Yes — Claude Code is exactly the right tool for this. It reads your files, edits them directly, runs the build to check for errors, and can preview changes. Think of it as a developer you can talk to in plain English.
-
----
-
-## Quick reference — things you'll do often
-
-| Task | What to do |
-|------|-----------|
-| New blog post | Create `src/content/posts/slug/index.mdx` |
-| Publish changes | `git add -A && git commit -m "message" && git push` |
-| Change favicon | Replace `public/favicon.svg` |
-| Change colours | Edit `:root` variables in `src/styles/global.css` |
-| Change social links | Edit `src/layouts/Base.astro` lines 49 + 55 |
-| Preview locally | `npm run dev` → open `http://localhost:4321` |
-| Check for errors | `npm run build` |
-
----
-
-## If something breaks
-
-Tell Claude exactly what you see — paste the error message. Everything is version-controlled in git, so nothing is ever permanently broken. The worst case is reverting to the last working commit, which takes one command.
+If something breaks: paste the error. Everything is in git; the worst case
+is reverting one commit.
