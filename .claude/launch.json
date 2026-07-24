@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview"],
       "port": 4321
+    },
+    {
+      "name": "Wedding Site Dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/damianpickett/Projects/wedding-site", "run", "dev", "--", "--port", "4381"],
+      "port": 4381
     }
   ]
 }
